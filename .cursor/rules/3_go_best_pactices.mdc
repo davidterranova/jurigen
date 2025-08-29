@@ -1,0 +1,39 @@
+---
+description: Go best practices
+alwaysApply: true
+---
+
+### Project Structure Guidelines:
+- Use a consistent project layout:
+  - cmd/: application entrypoints
+  - internal/: core application logic (not exposed externally)
+  - pkg/: shared utilities and packages
+  - api/: gRPC/REST transport definitions and handlers
+  - configs/: configuration schemas and loading
+  - test/: test utilities, mocks, and integration tests
+- Group code by feature when it improves clarity and cohesion.
+- Keep logic decoupled from framework-specific code.
+
+### Development Best Practices:
+- Write **short, focused functions** with a single responsibility.
+- Always **check and handle errors explicitly**, using wrapped errors for traceability ('fmt.Errorf("context: %w", err)').
+- Avoid **global state**; use constructor functions to inject dependencies.
+- Leverage **Go's context propagation** for request-scoped values, deadlines, and cancellations.
+- Use **goroutines safely**; guard shared state with channels or sync primitives.
+- **Defer closing resources** and handle them carefully to avoid leaks.
+
+### Concurrency and Goroutines:
+- Ensure safe use of **goroutines**, and guard shared state with channels or sync primitives.
+- Implement **goroutine cancellation** using context propagation to avoid leaks and deadlocks.
+
+### Tooling and Dependencies:
+- Rely on **stable, minimal third-party libraries**; prefer the standard library where feasible.
+- Use **Go modules** for dependency management and reproducibility.
+- Version-lock dependencies for deterministic builds.
+- Integrate **linting, testing, and security checks** in CI pipelines.
+
+### Libraries
+- Use testify in unit tests: github.com/stretchr/testify
+- Use cobra for entrypoints: github.com/spf13/cobra
+- Use zerolog for logging: github.com/rs/zerolog
+- Use go uuid: github.com/google/uuid

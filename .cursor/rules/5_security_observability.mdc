@@ -1,0 +1,32 @@
+---
+description: security and observability guidelines
+alwaysApply: true
+---
+
+### Observability with OpenTelemetry:
+- Use **OpenTelemetry** for distributed tracing, metrics, and structured logging.
+- Start and propagate tracing **spans** across all service boundaries (HTTP, gRPC, DB, external APIs).
+- Always attach 'context.Context' to spans, logs, and metric exports.
+- Use **otel.Tracer** for creating spans and **otel.Meter** for collecting metrics.
+- Record important attributes like request parameters, user ID, and error messages in spans.
+- Use **log correlation** by injecting trace IDs into structured logs.
+- Export data to **OpenTelemetry Collector**, **Jaeger**, or **Prometheus**.
+
+### Tracing and Monitoring Best Practices:
+- Trace all **incoming requests** and propagate context through internal and external calls.
+- Use **middleware** to instrument HTTP and gRPC endpoints automatically.
+- Annotate slow, critical, or error-prone paths with **custom spans**.
+- Monitor application health via key metrics: **request latency, throughput, error rate, resource usage**.
+- Define **SLIs** (e.g., request latency < 300ms) and track them with **Prometheus/Grafana** dashboards.
+- Alert on key conditions (e.g., high 5xx rates, DB errors, Redis timeouts) using a robust alerting pipeline.
+- Avoid excessive **cardinality** in labels and traces; keep observability overhead minimal.
+- Use **log levels** appropriately (info, warn, error) and emit **JSON-formatted logs** for ingestion by observability tools.
+- Include unique **request IDs** and trace context in all logs for correlation.
+
+### Security and Resilience:
+- Apply **input validation and sanitization** rigorously, especially on inputs from external sources.
+- Use secure defaults for **JWT, cookies**, and configuration settings.
+- Isolate sensitive operations with clear **permission boundaries**.
+- Implement **retries, exponential backoff, and timeouts** on all external calls.
+- Use **circuit breakers and rate limiting** for service protection.
+- Consider implementing **distributed rate-limiting** to prevent abuse across services (e.g., using Redis).

@@ -1,0 +1,11 @@
+---
+description: General architecture
+alwaysApply: true
+---
+
+### Architecture Patterns:
+- Apply **Clean Architecture** by structuring code into handlers/controllers, services/use cases, repositories/data access, and domain models.
+- Use **domain-driven design** principles where applicable.
+- Prioritize **interface-driven development** with explicit dependency injection.
+- Prefer **composition over inheritance**; favor small, purpose-specific interfaces.
+- Ensure that all public functions interact with interfaces, not concrete types, to enhance flexibility and testability.

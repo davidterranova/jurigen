@@ -1,0 +1,42 @@
+---
+description: General product description
+alwaysApply: true
+---
+
+# Product context
+This micro service is part of a larger project that aims to provide a context builder for a legal case.
+It relies on directed acyclic graph to build a context by asking questions to the user.
+
+## Graph structure
+Each node of the graph can either be a question or a leaf node.
+Each non leaf nodes have a question and can have one or multiple answers represented as child nodes.
+If a node has no child node, it is a leaf node and the context is built.
+
+## Functional requirements
+The graph is traversed by starting from the root node and following the child nodes until a leaf node is reached.
+Once a leaf node is reached, the context is built and returned by compiling all the asnwered questions.
+It should be possible to add a question to a leaf node.
+It should be possible to assign a new answer to an existing non leaf node.
+Each node or leaf has a unique uuid that is used through a response provider interface to gather the answers.
+The graph is loaded and saved from/to a JSON file.
+It should be possible to load an existing set of answers from JSON file and save it to a JSON file.
+It should be possible to traverse the graph interactively by dynamically providing the answers through the response provider interface and a CLI implementation.
+
+# Product context
+This micro service is part of a larger project that aims to provide a context builder for a legal case.
+It relies on directed acyclic graph to build a context by asking questions to the user.
+
+## Graph structure
+Each node of the graph can either be a question or a leaf node.
+Each non leaf nodes have a question and can have one or multiple answers represented as child nodes.
+If a node has no child node, it is a leaf node and the context is built.
+
+## Functional requirements
+The graph is traversed by starting from the root node and following the child nodes until a leaf node is reached.
+Once a leaf node is reached, the context is built and returned by compiling all the asnwered questions.
+It should be possible to add a question to a leaf node.
+It should be possible to assign a new answer to an existing non leaf node.
+Each node or leaf has a unique uuid that is used through a response provider interface to gather the answers.
+The graph is loaded and saved from/to a JSON file.
+It should be possible to load an existing set of answers from JSON file and save it to a JSON file.
+It should be possible to traverse the graph interactively by dynamically providing the answers through the response provider interface and a CLI implementation.
