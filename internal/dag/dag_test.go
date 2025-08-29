@@ -363,19 +363,23 @@ func TestDAG_UnmarshalJSON(t *testing.T) {
 	}{
 		{
 			name: "unmarshals valid DAG JSON",
-			data: `[
-				{
-					"id": "8b007ce4-b676-5fb3-9f93-f5f6c41cb655",
-					"question": "Test question?",
-					"answers": [
-						{
-							"id": "fc28c4b6-d185-cf56-a7e4-dead499ff1e8",
-							"answer": "Yes"
-						}
-					]
-				}
-			]`,
+			data: `{
+				"id": "550e8400-e29b-41d4-a716-446655440000",
+				"nodes": [
+					{
+						"id": "8b007ce4-b676-5fb3-9f93-f5f6c41cb655",
+						"question": "Test question?",
+						"answers": [
+							{
+								"id": "fc28c4b6-d185-cf56-a7e4-dead499ff1e8",
+								"answer": "Yes"
+							}
+						]
+					}
+				]
+			}`,
 			verify: func(t *testing.T, d DAG) {
+				assert.Equal(t, uuid.MustParse("550e8400-e29b-41d4-a716-446655440000"), d.Id)
 				assert.Equal(t, 1, len(d.Nodes))
 
 				nodeId := uuid.MustParse("8b007ce4-b676-5fb3-9f93-f5f6c41cb655")
@@ -387,9 +391,13 @@ func TestDAG_UnmarshalJSON(t *testing.T) {
 			},
 		},
 		{
-			name: "unmarshals empty array",
-			data: "[]",
+			name: "unmarshals empty nodes",
+			data: `{
+				"id": "550e8400-e29b-41d4-a716-446655440001",
+				"nodes": []
+			}`,
 			verify: func(t *testing.T, d DAG) {
+				assert.Equal(t, uuid.MustParse("550e8400-e29b-41d4-a716-446655440001"), d.Id)
 				assert.Equal(t, 0, len(d.Nodes))
 			},
 		},
@@ -397,7 +405,7 @@ func TestDAG_UnmarshalJSON(t *testing.T) {
 			name:    "returns error for invalid JSON",
 			data:    "invalid json",
 			wantErr: true,
-			errMsg:  "error unmarshalling data",
+			errMsg:  "error unmarshalling DAG data",
 		},
 	}
 

@@ -1,56 +1,59 @@
-[
-    {
-        "id": "8b007ce4-b676-5fb3-9f93-f5f6c41cb655",
-        "question": "Le problème concerne-t-il votre vie professionnelle ?",
-        "answers": [
-            {
-                "id": "fc28c4b6-d185-cf56-a7e4-dead499ff1e8",
-                "answer": "Oui",
-                "next_node": "ae0cf67a-2031-46c2-36e9-9389972e3791"
-            },
-            {
-                "id": "14d5bae6-161e-b1f5-af81-77ed4283cb8f",
-                "answer": "Non",
-                "next_node": "0982ae9b-9b26-adf0-d50c-f763f03b851b"
-            }
-        ]
-    },
-    {
-        "id": "0982ae9b-9b26-adf0-d50c-f763f03b851b",
-        "question": "Le problème concerne-t-il votre vie privée ?",
-        "answers": [
-            {
-                "id": "0f8cdd0e-3227-64a4-01f8-9bab3e364a5f",
-                "answer": "Oui"
-            },
-            {
-                "id": "f87cb96f-02eb-5151-0d75-963a9969556a",
-                "answer": "Non"
-            }
-        ]
-    },
-    {
-        "id": "ae0cf67a-2031-46c2-36e9-9389972e3791",
-        "question": "Quelle est votre situation professionnelle ?",
-        "answers": [
-            {
-                "id": "0f8cdd0e-3227-64a4-01f8-9bab3e364a5f",
-                "answer": "Sans emploi",
-                "next_node": "0982ae9b-9b26-adf0-d50c-f763f03b851b"
-            },
-            {
-                "id": "d4cf562a-2753-d2e3-7b85-257871db677b",
-                "answer": "Employé"
-            },
-            
-            {
-                "id": "f2cb994b-1e1a-def4-42d4-62e8d2907916",
-                "answer": "Chef d'entreprise"
-            },
-            {
-                "id": "bcaba057-0038-24ca-fbca-1654605680ad",
-                "answer": "Autre"
-            }
-        ]
-    }
-]
+{
+    "id": "be5af6fa-04d7-a23c-f5c8-90ec80a753d7",
+    "nodes": [
+        {
+            "id": "8b007ce4-b676-5fb3-9f93-f5f6c41cb655",
+            "question": "Le problème concerne-t-il votre vie professionnelle ?",
+            "answers": [
+                {
+                    "id": "fc28c4b6-d185-cf56-a7e4-dead499ff1e8",
+                    "answer": "Oui",
+                    "next_node": "ae0cf67a-2031-46c2-36e9-9389972e3791"
+                },
+                {
+                    "id": "14d5bae6-161e-b1f5-af81-77ed4283cb8f",
+                    "answer": "Non",
+                    "next_node": "0982ae9b-9b26-adf0-d50c-f763f03b851b"
+                }
+            ]
+        },
+        {
+            "id": "0982ae9b-9b26-adf0-d50c-f763f03b851b",
+            "question": "Le problème concerne-t-il votre vie privée ?",
+            "answers": [
+                {
+                    "id": "0f8cdd0e-3227-64a4-01f8-9bab3e364a5f",
+                    "answer": "Oui"
+                },
+                {
+                    "id": "f87cb96f-02eb-5151-0d75-963a9969556a",
+                    "answer": "Non"
+                }
+            ]
+        },
+        {
+            "id": "ae0cf67a-2031-46c2-36e9-9389972e3791",
+            "question": "Quelle est votre situation professionnelle ?",
+            "answers": [
+                {
+                    "id": "0f8cdd0e-3227-64a4-01f8-9bab3e364a5f",
+                    "answer": "Sans emploi",
+                    "next_node": "0982ae9b-9b26-adf0-d50c-f763f03b851b"
+                },
+                {
+                    "id": "d4cf562a-2753-d2e3-7b85-257871db677b",
+                    "answer": "Employé"
+                },
+                
+                {
+                    "id": "f2cb994b-1e1a-def4-42d4-62e8d2907916",
+                    "answer": "Chef d'entreprise"
+                },
+                {
+                    "id": "bcaba057-0038-24ca-fbca-1654605680ad",
+                    "answer": "Autre"
+                }
+            ]
+        }
+    ]
+}

@@ -9,11 +9,13 @@ import (
 )
 
 type DAG struct {
+	Id    uuid.UUID `json:"id"`
 	Nodes map[uuid.UUID]Node
 }
 
 func NewDAG() DAG {
 	return DAG{
+		Id:    uuid.New(),
 		Nodes: make(map[uuid.UUID]Node),
 	}
 }
@@ -71,22 +73,37 @@ type Answer struct {
 	NextNode  *uuid.UUID `json:"next_node"`
 }
 
+// dagJSON represents the JSON structure for marshaling/unmarshaling a DAG
+type dagJSON struct {
+	Id    uuid.UUID `json:"id"`
+	Nodes []Node    `json:"nodes"`
+}
+
 func (d DAG) MarshalJSON() ([]byte, error) {
 	nodes := make([]Node, 0, len(d.Nodes))
 	for _, node := range d.Nodes {
 		nodes = append(nodes, node)
 	}
 
-	return json.Marshal(nodes)
+	// Create a dagJSON struct to marshal both id and nodes
+	dag := dagJSON{
+		Id:    d.Id,
+		Nodes: nodes,
+	}
+
+	return json.Marshal(dag)
 }
 
 func (d *DAG) UnmarshalJSON(data []byte) error {
-	nodes := make([]Node, 0)
+	var dag dagJSON
 
-	err := json.Unmarshal(data, &nodes)
+	err := json.Unmarshal(data, &dag)
 	if err != nil {
-		return fmt.Errorf("error unmarshalling data: %w", err)
+		return fmt.Errorf("error unmarshalling DAG data: %w", err)
 	}
+
+	// Set the DAG id from the unmarshaled data
+	d.Id = dag.Id
 
 	// Initialize the Nodes map if it's nil
 	if d.Nodes == nil {
@@ -94,7 +111,7 @@ func (d *DAG) UnmarshalJSON(data []byte) error {
 	}
 
 	// Add all nodes to the map
-	for _, node := range nodes {
+	for _, node := range dag.Nodes {
 		d.Nodes[node.Id] = node
 	}
 
