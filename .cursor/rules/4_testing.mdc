@@ -4,6 +4,7 @@ alwaysApply: true
 ---
 
 ### Testing:
+- Ensure unit tests are added with all new features or requests
 - Write **unit tests** using table-driven patterns and parallel execution.
 - **Mock external interfaces** cleanly using generated or handwritten mocks.
 - Separate **fast unit tests** from slower integration and E2E tests.
