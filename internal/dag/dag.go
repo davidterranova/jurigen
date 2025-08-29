@@ -68,9 +68,10 @@ type Node struct {
 }
 
 type Answer struct {
-	Id        uuid.UUID  `json:"id"`
-	Statement string     `json:"answer"`
-	NextNode  *uuid.UUID `json:"next_node"`
+	Id         uuid.UUID  `json:"id"`
+	Statement  string     `json:"answer"`
+	NextNode   *uuid.UUID `json:"next_node"`
+	ParentNode *Node      `json:"-"` // Excluded from JSON to avoid circular references
 }
 
 // dagJSON represents the JSON structure for marshaling/unmarshaling a DAG
@@ -110,9 +111,17 @@ func (d *DAG) UnmarshalJSON(data []byte) error {
 		d.Nodes = make(map[uuid.UUID]Node)
 	}
 
-	// Add all nodes to the map
+	// Add all nodes to the map and set parent pointers for answers
 	for _, node := range dag.Nodes {
-		d.Nodes[node.Id] = node
+		// Create a copy of the node to avoid pointer issues
+		nodeCopy := node
+
+		// Set parent pointers for all answers
+		for i := range nodeCopy.Answers {
+			nodeCopy.Answers[i].ParentNode = &nodeCopy
+		}
+
+		d.Nodes[nodeCopy.Id] = nodeCopy
 	}
 
 	return nil
@@ -168,9 +177,9 @@ func (d DAG) Walk(nodeId uuid.UUID, fnAnswer func(Node) (Answer, error)) ([]Answ
 
 		// Validate that the selected answer belongs to this node
 		var validAnswer *Answer
-		for _, answer := range currentNode.Answers {
+		for i, answer := range currentNode.Answers {
 			if answer.Id == selectedAnswer.Id {
-				validAnswer = &answer
+				validAnswer = &currentNode.Answers[i]
 				break
 			}
 		}
@@ -179,7 +188,7 @@ func (d DAG) Walk(nodeId uuid.UUID, fnAnswer func(Node) (Answer, error)) ([]Answ
 			return path, fmt.Errorf("selected answer %s is not valid for node %s", selectedAnswer.Id, currentNodeId)
 		}
 
-		// Add the answer to the path
+		// Add the answer to the path (with parent pointer preserved)
 		path = append(path, *validAnswer)
 
 		// If this answer has no next node, we've reached a leaf

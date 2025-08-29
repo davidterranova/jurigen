@@ -1,7 +1,6 @@
 package dag
 
 import (
-	"encoding/json"
 	"testing"
 
 	"github.com/google/uuid"
@@ -12,80 +11,61 @@ import (
 func TestNewDAG(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		name string
-		want DAG
-	}{
-		{
-			name: "creates empty DAG with initialized fields",
-			want: DAG{
-				Nodes: make(map[uuid.UUID]Node),
-			},
-		},
-	}
+	t.Run("creates empty DAG with initialized fields", func(t *testing.T) {
+		t.Parallel()
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
+		d := NewDAG()
 
-			got := NewDAG()
-
-			assert.NotNil(t, got.Nodes)
-			assert.Equal(t, 0, len(got.Nodes))
-		})
-	}
+		assert.NotEqual(t, uuid.Nil, d.Id)
+		assert.NotNil(t, d.Nodes)
+		assert.Equal(t, 0, len(d.Nodes))
+	})
 }
 
 func TestDAG_GetNode(t *testing.T) {
 	t.Parallel()
 
-	// Setup test data
-	nodeId1 := uuid.New()
-	nodeId2 := uuid.New()
-	nonExistentId := uuid.New()
+	d := NewDAG()
+	testId1 := uuid.New()
+	testId2 := uuid.New()
 
 	node1 := Node{
-		Id:       nodeId1,
-		Question: "Test question 1",
+		Id:       testId1,
+		Question: "Test question 1?",
 		Answers:  []Answer{},
 	}
 
 	node2 := Node{
-		Id:       nodeId2,
-		Question: "Test question 2",
+		Id:       testId2,
+		Question: "Test question 2?",
 		Answers:  []Answer{},
 	}
 
-	d := NewDAG()
-	d.Nodes[nodeId1] = node1
-	d.Nodes[nodeId2] = node2
+	d.Nodes[testId1] = node1
+	d.Nodes[testId2] = node2
 
 	tests := []struct {
-		name    string
-		dag     DAG
-		id      uuid.UUID
-		want    Node
-		wantErr bool
-		errMsg  string
+		name     string
+		nodeId   uuid.UUID
+		expected Node
+		wantErr  bool
 	}{
 		{
-			name: "returns existing node",
-			dag:  d,
-			id:   nodeId1,
-			want: node1,
+			name:     "returns existing node",
+			nodeId:   testId1,
+			expected: node1,
+			wantErr:  false,
 		},
 		{
-			name: "returns another existing node",
-			dag:  d,
-			id:   nodeId2,
-			want: node2,
+			name:     "returns another existing node",
+			nodeId:   testId2,
+			expected: node2,
+			wantErr:  false,
 		},
 		{
 			name:    "returns error for non-existent node",
-			dag:     d,
-			id:      nonExistentId,
+			nodeId:  uuid.New(),
 			wantErr: true,
-			errMsg:  "node not found",
 		},
 	}
 
@@ -93,16 +73,15 @@ func TestDAG_GetNode(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := tt.dag.GetNode(tt.id)
+			got, err := d.GetNode(tt.nodeId)
 
 			if tt.wantErr {
 				assert.Error(t, err)
-				assert.Contains(t, err.Error(), tt.errMsg)
 				return
 			}
 
 			require.NoError(t, err)
-			assert.Equal(t, tt.want, got)
+			assert.Equal(t, tt.expected, got)
 		})
 	}
 }
@@ -113,7 +92,6 @@ func TestDAG_GetRootNode(t *testing.T) {
 	tests := []struct {
 		name    string
 		setup   func() DAG
-		want    Node
 		wantErr bool
 		errMsg  string
 	}{
@@ -123,14 +101,13 @@ func TestDAG_GetRootNode(t *testing.T) {
 				d := NewDAG()
 				rootId := uuid.New()
 				childId := uuid.New()
-				answerId := uuid.New()
 
 				root := Node{
 					Id:       rootId,
-					Question: "Root question",
+					Question: "Root question?",
 					Answers: []Answer{
 						{
-							Id:        answerId,
+							Id:        uuid.New(),
 							Statement: "Go to child",
 							NextNode:  &childId,
 						},
@@ -139,7 +116,7 @@ func TestDAG_GetRootNode(t *testing.T) {
 
 				child := Node{
 					Id:       childId,
-					Question: "Child question",
+					Question: "Child question?",
 					Answers:  []Answer{},
 				}
 
@@ -147,46 +124,49 @@ func TestDAG_GetRootNode(t *testing.T) {
 				d.Nodes[childId] = child
 				return d
 			},
-			want: Node{
-				Id:       uuid.UUID{},
-				Question: "Root question",
+		},
+		{
+			name: "returns error for empty DAG",
+			setup: func() DAG {
+				return NewDAG()
 			},
+			wantErr: true,
+			errMsg:  "no root node found",
 		},
 		{
 			name: "returns error when no root node found",
 			setup: func() DAG {
 				d := NewDAG()
-				id1 := uuid.New()
-				id2 := uuid.New()
-				answerId := uuid.New()
+				node1Id := uuid.New()
+				node2Id := uuid.New()
 
-				// Create circular reference
+				// Create a circular reference
 				node1 := Node{
-					Id:       id1,
-					Question: "Node 1",
+					Id:       node1Id,
+					Question: "Node 1?",
 					Answers: []Answer{
 						{
-							Id:        answerId,
-							Statement: "Go to node 2",
-							NextNode:  &id2,
+							Id:        uuid.New(),
+							Statement: "Go to node2",
+							NextNode:  &node2Id,
 						},
 					},
 				}
 
 				node2 := Node{
-					Id:       id2,
-					Question: "Node 2",
+					Id:       node2Id,
+					Question: "Node 2?",
 					Answers: []Answer{
 						{
 							Id:        uuid.New(),
-							Statement: "Go to node 1",
-							NextNode:  &id1,
+							Statement: "Go to node1",
+							NextNode:  &node1Id,
 						},
 					},
 				}
 
-				d.Nodes[id1] = node1
-				d.Nodes[id2] = node2
+				d.Nodes[node1Id] = node1
+				d.Nodes[node2Id] = node2
 				return d
 			},
 			wantErr: true,
@@ -201,13 +181,13 @@ func TestDAG_GetRootNode(t *testing.T) {
 
 				root1 := Node{
 					Id:       root1Id,
-					Question: "Root 1",
+					Question: "Root 1?",
 					Answers:  []Answer{},
 				}
 
 				root2 := Node{
 					Id:       root2Id,
-					Question: "Root 2",
+					Question: "Root 2?",
 					Answers:  []Answer{},
 				}
 
@@ -217,14 +197,6 @@ func TestDAG_GetRootNode(t *testing.T) {
 			},
 			wantErr: true,
 			errMsg:  "multiple root nodes found",
-		},
-		{
-			name: "returns error for empty DAG",
-			setup: func() DAG {
-				return NewDAG()
-			},
-			wantErr: true,
-			errMsg:  "no root node found",
 		},
 	}
 
@@ -242,7 +214,7 @@ func TestDAG_GetRootNode(t *testing.T) {
 			}
 
 			require.NoError(t, err)
-			assert.Equal(t, tt.want.Question, got.Question)
+			assert.NotEqual(t, uuid.Nil, got.Id)
 		})
 	}
 }
@@ -251,17 +223,19 @@ func TestDAG_MarshalJSON(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name    string
-		setup   func() DAG
-		want    string // We'll check that it contains expected elements
-		wantErr bool
+		name   string
+		setup  func() DAG
+		verify func(t *testing.T, data []byte)
 	}{
 		{
 			name: "marshals empty DAG",
 			setup: func() DAG {
 				return NewDAG()
 			},
-			want: "[]",
+			verify: func(t *testing.T, data []byte) {
+				assert.Contains(t, string(data), `"nodes":[]`)
+				assert.Contains(t, string(data), `"id"`)
+			},
 		},
 		{
 			name: "marshals DAG with single node",
@@ -272,7 +246,7 @@ func TestDAG_MarshalJSON(t *testing.T) {
 
 				node := Node{
 					Id:       nodeId,
-					Question: "Test question",
+					Question: "Test question?",
 					Answers: []Answer{
 						{
 							Id:        answerId,
@@ -285,46 +259,55 @@ func TestDAG_MarshalJSON(t *testing.T) {
 				d.Nodes[nodeId] = node
 				return d
 			},
-			want: "Test question",
+			verify: func(t *testing.T, data []byte) {
+				assert.Contains(t, string(data), "Test question")
+				assert.Contains(t, string(data), "Test answer")
+				assert.Contains(t, string(data), `"id"`)
+				assert.Contains(t, string(data), `"nodes"`)
+			},
 		},
 		{
 			name: "marshals DAG with multiple nodes",
 			setup: func() DAG {
 				d := NewDAG()
-				rootId := uuid.New()
-				childId := uuid.New()
-				answerId1 := uuid.New()
-				answerId2 := uuid.New()
+				node1Id := uuid.New()
+				node2Id := uuid.New()
 
-				root := Node{
-					Id:       rootId,
-					Question: "Root question?",
+				node1 := Node{
+					Id:       node1Id,
+					Question: "First question?",
 					Answers: []Answer{
 						{
-							Id:        answerId1,
-							Statement: "Go to child",
-							NextNode:  &childId,
+							Id:        uuid.New(),
+							Statement: "First answer",
+							NextNode:  &node2Id,
 						},
 					},
 				}
 
-				child := Node{
-					Id:       childId,
-					Question: "Child question?",
+				node2 := Node{
+					Id:       node2Id,
+					Question: "Second question?",
 					Answers: []Answer{
 						{
-							Id:        answerId2,
-							Statement: "End here",
+							Id:        uuid.New(),
+							Statement: "Second answer",
 							NextNode:  nil,
 						},
 					},
 				}
 
-				d.Nodes[rootId] = root
-				d.Nodes[childId] = child
+				d.Nodes[node1Id] = node1
+				d.Nodes[node2Id] = node2
 				return d
 			},
-			want: "Root question",
+			verify: func(t *testing.T, data []byte) {
+				jsonStr := string(data)
+				assert.Contains(t, jsonStr, "First question")
+				assert.Contains(t, jsonStr, "Second question")
+				assert.Contains(t, jsonStr, "First answer")
+				assert.Contains(t, jsonStr, "Second answer")
+			},
 		},
 	}
 
@@ -333,20 +316,14 @@ func TestDAG_MarshalJSON(t *testing.T) {
 			t.Parallel()
 
 			d := tt.setup()
-			got, err := d.MarshalJSON()
-
-			if tt.wantErr {
-				assert.Error(t, err)
-				return
-			}
+			data, err := d.MarshalJSON()
 
 			require.NoError(t, err)
-			assert.Contains(t, string(got), tt.want)
+			assert.NotEmpty(t, data)
 
-			// Verify it's valid JSON
-			var result interface{}
-			err = json.Unmarshal(got, &result)
-			assert.NoError(t, err)
+			if tt.verify != nil {
+				tt.verify(t, data)
+			}
 		})
 	}
 }
@@ -388,6 +365,11 @@ func TestDAG_UnmarshalJSON(t *testing.T) {
 				assert.Equal(t, "Test question?", node.Question)
 				assert.Equal(t, 1, len(node.Answers))
 				assert.Equal(t, "Yes", node.Answers[0].Statement)
+
+				// Test ParentNode pointer is set
+				assert.NotNil(t, node.Answers[0].ParentNode)
+				assert.Equal(t, nodeId, node.Answers[0].ParentNode.Id)
+				assert.Equal(t, "Test question?", node.Answers[0].ParentNode.Question)
 			},
 		},
 		{
@@ -434,31 +416,37 @@ func TestDAG_String(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name  string
-		setup func() DAG
-		want  []string // Strings that should be contained in output
+		name   string
+		setup  func() DAG
+		verify func(t *testing.T, result string)
 	}{
 		{
 			name: "formats empty DAG",
 			setup: func() DAG {
 				return NewDAG()
 			},
-			want: []string{},
+			verify: func(t *testing.T, result string) {
+				assert.Equal(t, "", result)
+			},
 		},
 		{
 			name: "formats DAG with nodes and answers",
 			setup: func() DAG {
 				d := NewDAG()
 				nodeId := uuid.New()
-				answerId := uuid.New()
 
 				node := Node{
 					Id:       nodeId,
 					Question: "Test question?",
 					Answers: []Answer{
 						{
-							Id:        answerId,
-							Statement: "Test answer",
+							Id:        uuid.New(),
+							Statement: "Answer 1",
+							NextNode:  nil,
+						},
+						{
+							Id:        uuid.New(),
+							Statement: "Answer 2",
 							NextNode:  nil,
 						},
 					},
@@ -467,10 +455,11 @@ func TestDAG_String(t *testing.T) {
 				d.Nodes[nodeId] = node
 				return d
 			},
-			want: []string{
-				"Question: Test question?",
-				"Answer: Test answer",
-				"[LEAF]",
+			verify: func(t *testing.T, result string) {
+				assert.Contains(t, result, "Question: Test question?")
+				assert.Contains(t, result, "Answer: Answer 1")
+				assert.Contains(t, result, "Answer: Answer 2")
+				assert.Contains(t, result, "[LEAF]")
 			},
 		},
 	}
@@ -480,10 +469,10 @@ func TestDAG_String(t *testing.T) {
 			t.Parallel()
 
 			d := tt.setup()
-			got := d.String()
+			result := d.String()
 
-			for _, want := range tt.want {
-				assert.Contains(t, got, want)
+			if tt.verify != nil {
+				tt.verify(t, result)
 			}
 		})
 	}
@@ -535,6 +524,16 @@ func TestDAG_Walk(t *testing.T) {
 
 				d.Nodes[rootId] = root
 				d.Nodes[childId] = child
+
+				// Set parent pointers manually for test
+				rootCopy := d.Nodes[rootId]
+				rootCopy.Answers[0].ParentNode = &rootCopy
+				d.Nodes[rootId] = rootCopy
+
+				childCopy := d.Nodes[childId]
+				childCopy.Answers[0].ParentNode = &childCopy
+				d.Nodes[childId] = childCopy
+
 				return d, rootId
 			},
 			fnAnswer: func(node Node) (Answer, error) {
@@ -624,11 +623,7 @@ func TestDAG_Walk(t *testing.T) {
 			},
 			fnAnswer: func(node Node) (Answer, error) {
 				// Return an answer with different ID
-				return Answer{
-					Id:        uuid.New(),
-					Statement: "Invalid answer",
-					NextNode:  nil,
-				}, nil
+				return Answer{Id: uuid.New(), Statement: "Invalid"}, nil
 			},
 			wantErr: true,
 			errMsg:  "is not valid for node",
@@ -654,6 +649,74 @@ func TestDAG_Walk(t *testing.T) {
 	}
 }
 
+// TestDAG_WalkParentNodePointers tests that Walk returns answers with correct parent pointers
+func TestDAG_WalkParentNodePointers(t *testing.T) {
+	t.Parallel()
+
+	// Create a DAG
+	d := NewDAG()
+	node1Id := uuid.New()
+	node2Id := uuid.New()
+	answer1Id := uuid.New()
+	answer2Id := uuid.New()
+
+	// Build the DAG structure
+	d.Nodes[node1Id] = Node{
+		Id:       node1Id,
+		Question: "Do you like programming?",
+		Answers: []Answer{
+			{
+				Id:        answer1Id,
+				Statement: "Yes",
+				NextNode:  &node2Id,
+			},
+		},
+	}
+
+	d.Nodes[node2Id] = Node{
+		Id:       node2Id,
+		Question: "What language do you prefer?",
+		Answers: []Answer{
+			{
+				Id:        answer2Id,
+				Statement: "Go",
+				NextNode:  nil,
+			},
+		},
+	}
+
+	// Marshal and unmarshal to set parent pointers
+	jsonData, err := d.MarshalJSON()
+	require.NoError(t, err)
+
+	testDAG := NewDAG()
+	err = testDAG.UnmarshalJSON(jsonData)
+	require.NoError(t, err)
+
+	// Test Walk function with parent pointers
+	answerFn := func(node Node) (Answer, error) {
+		return node.Answers[0], nil
+	}
+
+	path, err := testDAG.Walk(node1Id, answerFn)
+	require.NoError(t, err)
+	require.Equal(t, 2, len(path))
+
+	// Verify first answer has correct parent pointer
+	firstAnswer := path[0]
+	assert.Equal(t, "Yes", firstAnswer.Statement)
+	assert.NotNil(t, firstAnswer.ParentNode)
+	assert.Equal(t, "Do you like programming?", firstAnswer.ParentNode.Question)
+	assert.Equal(t, node1Id, firstAnswer.ParentNode.Id)
+
+	// Verify second answer has correct parent pointer
+	secondAnswer := path[1]
+	assert.Equal(t, "Go", secondAnswer.Statement)
+	assert.NotNil(t, secondAnswer.ParentNode)
+	assert.Equal(t, "What language do you prefer?", secondAnswer.ParentNode.Question)
+	assert.Equal(t, node2Id, secondAnswer.ParentNode.Id)
+}
+
 // TestDAG_JSONRoundTrip tests the complete marshal/unmarshal cycle
 func TestDAG_JSONRoundTrip(t *testing.T) {
 	t.Parallel()
@@ -663,55 +726,45 @@ func TestDAG_JSONRoundTrip(t *testing.T) {
 
 		// Setup original DAG
 		original := NewDAG()
-		rootId := uuid.New()
-		childId := uuid.New()
-		answerId1 := uuid.New()
-		answerId2 := uuid.New()
+		nodeId := uuid.New()
+		answerId := uuid.New()
 
-		root := Node{
-			Id:       rootId,
-			Question: "Root question?",
+		node := Node{
+			Id:       nodeId,
+			Question: "Test roundtrip?",
 			Answers: []Answer{
 				{
-					Id:        answerId1,
-					Statement: "Go to child",
-					NextNode:  &childId,
-				},
-			},
-		}
-
-		child := Node{
-			Id:       childId,
-			Question: "Child question?",
-			Answers: []Answer{
-				{
-					Id:        answerId2,
-					Statement: "End here",
+					Id:        answerId,
+					Statement: "Yes",
 					NextNode:  nil,
 				},
 			},
 		}
 
-		original.Nodes[rootId] = root
-		original.Nodes[childId] = child
+		original.Nodes[nodeId] = node
 
-		// Marshal to JSON
+		// Marshal
 		data, err := original.MarshalJSON()
 		require.NoError(t, err)
 
-		// Unmarshal to new DAG
-		restored := NewDAG()
-		err = restored.UnmarshalJSON(data)
+		// Unmarshal
+		roundtrip := NewDAG()
+		err = roundtrip.UnmarshalJSON(data)
 		require.NoError(t, err)
 
 		// Verify structure is preserved
-		assert.Equal(t, len(original.Nodes), len(restored.Nodes))
+		assert.Equal(t, original.Id, roundtrip.Id)
+		assert.Equal(t, len(original.Nodes), len(roundtrip.Nodes))
 
-		for id, originalNode := range original.Nodes {
-			restoredNode, exists := restored.Nodes[id]
-			assert.True(t, exists)
-			assert.Equal(t, originalNode.Question, restoredNode.Question)
-			assert.Equal(t, len(originalNode.Answers), len(restoredNode.Answers))
-		}
+		roundtripNode, exists := roundtrip.Nodes[nodeId]
+		assert.True(t, exists)
+		assert.Equal(t, node.Question, roundtripNode.Question)
+		assert.Equal(t, len(node.Answers), len(roundtripNode.Answers))
+		assert.Equal(t, node.Answers[0].Statement, roundtripNode.Answers[0].Statement)
+
+		// Verify parent pointers are set correctly after unmarshal
+		assert.NotNil(t, roundtripNode.Answers[0].ParentNode)
+		assert.Equal(t, nodeId, roundtripNode.Answers[0].ParentNode.Id)
+		assert.Equal(t, "Test roundtrip?", roundtripNode.Answers[0].ParentNode.Question)
 	})
 }

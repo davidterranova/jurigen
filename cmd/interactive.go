@@ -51,47 +51,10 @@ var interactiveCmd = &cobra.Command{
 		fmt.Println("Enter the number corresponding to your choice.")
 		fmt.Println()
 
-		// Custom walk that tracks questions and answers
-		type QuestionAnswer struct {
-			Question string
-			Answer   string
-		}
-
-		var context []QuestionAnswer
-		currentNodeId := rootNode.Id
-
-		// Interactive walk with question tracking
-		for {
-			// Get the current node
-			currentNode, err := d.GetNode(currentNodeId)
-			if err != nil {
-				log.Fatalf("error getting node %s: %v", currentNodeId, err)
-			}
-
-			// If this is a leaf node (no answers), we're done
-			if len(currentNode.Answers) == 0 {
-				break
-			}
-
-			// Get the answer choice from CLI
-			selectedAnswer, err := dag.CLIFnAnswer(currentNode)
-			if err != nil {
-				log.Fatalf("error getting answer for node %s: %v", currentNodeId, err)
-			}
-
-			// Add to context
-			context = append(context, QuestionAnswer{
-				Question: currentNode.Question,
-				Answer:   selectedAnswer.Statement,
-			})
-
-			// If this answer has no next node, we've reached a leaf
-			if selectedAnswer.NextNode == nil {
-				break
-			}
-
-			// Move to the next node
-			currentNodeId = *selectedAnswer.NextNode
+		// Use the DAG's Walk function with CLI answer provider
+		path, err := d.Walk(rootNode.Id, dag.CLIFnAnswer)
+		if err != nil {
+			log.Fatalf("error walking through DAG: %v", err)
 		}
 
 		// Display the final context
@@ -99,13 +62,13 @@ var interactiveCmd = &cobra.Command{
 		fmt.Println("CASE CONTEXT SUMMARY")
 		fmt.Println(strings.Repeat("=", 60))
 
-		for i, qa := range context {
-			fmt.Printf("%d. Q: %s\n", i+1, qa.Question)
-			fmt.Printf("   A: %s\n\n", qa.Answer)
+		for i, answer := range path {
+			fmt.Printf("%d. Q: %s\n", i+1, answer.ParentNode.Question)
+			fmt.Printf("   A: %s\n\n", answer.Statement)
 		}
 
 		fmt.Println(strings.Repeat("=", 60))
-		fmt.Printf("Context built successfully with %d question-answer pairs.\n", len(context))
+		fmt.Printf("Context built successfully with %d question-answer pairs.\n", len(path))
 	},
 }
 
