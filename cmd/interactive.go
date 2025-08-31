@@ -12,11 +12,12 @@ import (
 
 var (
 	interactiveDagFile string
+	collectContext     bool
 )
 
 var interactiveCmd = &cobra.Command{
 	Use:   "interactive",
-	Short: "Start an interactive session to walk through the DAG",
+	Short: "Start an interactive session to walk through the DAG with optional context collection",
 	Run: func(cmd *cobra.Command, args []string) {
 		// Validate that the file path is provided
 		if interactiveDagFile == "" {
@@ -51,8 +52,18 @@ var interactiveCmd = &cobra.Command{
 		fmt.Println("Enter the number corresponding to your choice.")
 		fmt.Println()
 
-		// Use the DAG's Walk function with CLI answer provider
-		path, err := d.Walk(rootNode.Id, dag.CLIFnAnswer)
+		// Choose the appropriate answer provider based on context flag
+		var answerProvider func(dag.Node) (dag.Answer, error)
+		if collectContext {
+			answerProvider = dag.CLIFnAnswerWithContext
+			fmt.Println("📝 Context collection enabled - you'll be prompted for additional details.")
+			fmt.Println()
+		} else {
+			answerProvider = dag.CLIFnAnswer
+		}
+
+		// Use the DAG's Walk function with the selected answer provider
+		path, err := d.Walk(rootNode.Id, answerProvider)
 		if err != nil {
 			log.Fatalf("error walking through DAG: %v", err)
 		}
@@ -64,7 +75,37 @@ var interactiveCmd = &cobra.Command{
 
 		for i, answer := range path {
 			fmt.Printf("%d. Q: %s\n", i+1, answer.ParentNode.Question)
-			fmt.Printf("   A: %s\n\n", answer.Statement)
+			fmt.Printf("   A: %s\n", answer.Statement)
+
+			// Display additional context if available
+			if answer.UserContext != "" {
+				fmt.Printf("   📝 Notes: %s\n", answer.UserContext)
+			}
+
+			if len(answer.Metadata) > 0 {
+				if conf, ok := answer.Metadata["confidence"].(float64); ok {
+					fmt.Printf("   📊 Confidence: %.1f/1.0\n", conf)
+				}
+				if tagsRaw, ok := answer.Metadata["tags"]; ok {
+					var tagStrs []string
+					switch tags := tagsRaw.(type) {
+					case []string:
+						tagStrs = tags
+					case []interface{}:
+						tagStrs = make([]string, len(tags))
+						for i, tag := range tags {
+							if tagStr, ok := tag.(string); ok {
+								tagStrs[i] = tagStr
+							}
+						}
+					}
+					if len(tagStrs) > 0 {
+						fmt.Printf("   🏷️  Tags: %s\n", strings.Join(tagStrs, ", "))
+					}
+				}
+			}
+
+			fmt.Println()
 		}
 
 		fmt.Println(strings.Repeat("=", 60))
@@ -74,6 +115,7 @@ var interactiveCmd = &cobra.Command{
 
 func init() {
 	interactiveCmd.Flags().StringVarP(&interactiveDagFile, "dag", "d", "", "Path to the DAG JSON file (required)")
+	interactiveCmd.Flags().BoolVarP(&collectContext, "context", "c", false, "Collect additional context and metadata for each answer")
 	interactiveCmd.MarkFlagRequired("dag")
 	rootCmd.AddCommand(interactiveCmd)
 }

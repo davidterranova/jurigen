@@ -768,3 +768,214 @@ func TestDAG_JSONRoundTrip(t *testing.T) {
 		assert.Equal(t, "Test roundtrip?", roundtripNode.Answers[0].ParentNode.Question)
 	})
 }
+
+// TestDAG_ContextMarshalling tests marshalling and unmarshalling with context fields
+func TestDAG_ContextMarshalling(t *testing.T) {
+	t.Parallel()
+
+	t.Run("marshals answers with user context and metadata", func(t *testing.T) {
+		t.Parallel()
+
+		// Create DAG with context-rich answers
+		d := NewDAG()
+		nodeId := uuid.New()
+		answerId := uuid.New()
+
+		answer := Answer{
+			Id:          answerId,
+			Statement:   "Yes, discrimination occurred",
+			NextNode:    nil,
+			UserContext: "Manager explicitly mentioned my age during termination",
+			Metadata: map[string]interface{}{
+				"confidence":       0.9,
+				"severity":         "high",
+				"tags":             []string{"age_discrimination", "wrongful_termination"},
+				"date_occurred":    "2024-01-15T10:30:00Z",
+				"sources":          []string{"HR Email", "Witness statement"},
+				"legal_strength":   0.8,
+				"damages_estimate": 50000,
+				"actions_needed":   []string{"gather_records", "interview_witnesses"},
+			},
+		}
+
+		node := Node{
+			Id:       nodeId,
+			Question: "Were you discriminated against?",
+			Answers:  []Answer{answer},
+		}
+
+		d.Nodes[nodeId] = node
+
+		// Marshal to JSON
+		jsonData, err := d.MarshalJSON()
+		require.NoError(t, err)
+
+		// Verify JSON contains context fields
+		jsonStr := string(jsonData)
+		assert.Contains(t, jsonStr, "user_context")
+		assert.Contains(t, jsonStr, "Manager explicitly mentioned my age")
+		assert.Contains(t, jsonStr, "metadata")
+		assert.Contains(t, jsonStr, "confidence")
+		assert.Contains(t, jsonStr, "age_discrimination")
+		assert.Contains(t, jsonStr, "sources")
+	})
+
+	t.Run("unmarshals answers with user context and metadata", func(t *testing.T) {
+		t.Parallel()
+
+		jsonData := `{
+			"id": "550e8400-e29b-41d4-a716-446655440000",
+			"nodes": [
+				{
+					"id": "8b007ce4-b676-5fb3-9f93-f5f6c41cb655",
+					"question": "Was there workplace harassment?",
+					"answers": [
+						{
+							"id": "fc28c4b6-d185-cf56-a7e4-dead499ff1e8",
+							"answer": "Yes, verbal harassment",
+							"next_node": null,
+							"user_context": "Supervisor made inappropriate comments daily",
+							"metadata": {
+								"confidence": 0.95,
+								"severity": "critical",
+								"tags": ["harassment", "hostile_environment"],
+								"witnesses": ["colleague_a", "colleague_b"],
+								"frequency": "daily",
+								"duration": "6_months"
+							}
+						}
+					]
+				}
+			]
+		}`
+
+		d := NewDAG()
+		err := d.UnmarshalJSON([]byte(jsonData))
+		require.NoError(t, err)
+
+		// Verify DAG structure
+		assert.Equal(t, uuid.MustParse("550e8400-e29b-41d4-a716-446655440000"), d.Id)
+		assert.Equal(t, 1, len(d.Nodes))
+
+		// Get the node and verify context was preserved
+		nodeId := uuid.MustParse("8b007ce4-b676-5fb3-9f93-f5f6c41cb655")
+		node, exists := d.Nodes[nodeId]
+		require.True(t, exists)
+
+		answer := node.Answers[0]
+		assert.Equal(t, "Yes, verbal harassment", answer.Statement)
+		assert.Equal(t, "Supervisor made inappropriate comments daily", answer.UserContext)
+
+		// Verify metadata
+		require.NotNil(t, answer.Metadata)
+		assert.Equal(t, 0.95, answer.Metadata["confidence"])
+		assert.Equal(t, "critical", answer.Metadata["severity"])
+
+		tags, ok := answer.Metadata["tags"].([]interface{})
+		require.True(t, ok)
+		assert.Equal(t, 2, len(tags))
+		assert.Equal(t, "harassment", tags[0])
+		assert.Equal(t, "hostile_environment", tags[1])
+
+		// Verify parent pointer is still set
+		assert.NotNil(t, answer.ParentNode)
+		assert.Equal(t, nodeId, answer.ParentNode.Id)
+	})
+
+	t.Run("omits empty context fields from JSON", func(t *testing.T) {
+		t.Parallel()
+
+		// Create DAG with answers that have no context
+		d := NewDAG()
+		nodeId := uuid.New()
+
+		answer := Answer{
+			Id:        uuid.New(),
+			Statement: "Basic answer without context",
+			NextNode:  nil,
+			// UserContext and Metadata left empty/nil
+		}
+
+		node := Node{
+			Id:       nodeId,
+			Question: "Basic question?",
+			Answers:  []Answer{answer},
+		}
+
+		d.Nodes[nodeId] = node
+
+		// Marshal to JSON
+		jsonData, err := d.MarshalJSON()
+		require.NoError(t, err)
+
+		jsonStr := string(jsonData)
+
+		// Verify context fields are omitted when empty
+		assert.NotContains(t, jsonStr, "user_context")
+		assert.NotContains(t, jsonStr, "metadata")
+
+		// But basic fields should still be present
+		assert.Contains(t, jsonStr, "Basic answer without context")
+		assert.Contains(t, jsonStr, "Basic question")
+	})
+
+	t.Run("handles mixed answers with and without context", func(t *testing.T) {
+		t.Parallel()
+
+		// Create DAG with mixed answer types
+		d := NewDAG()
+		nodeId := uuid.New()
+		answer1Id := uuid.New()
+		answer2Id := uuid.New()
+
+		// Answer with context
+		answerWithContext := Answer{
+			Id:          answer1Id,
+			Statement:   "Yes, with details",
+			NextNode:    nil,
+			UserContext: "Detailed explanation here",
+			Metadata: map[string]interface{}{
+				"confidence": 0.8,
+				"tags":       []string{"important"},
+			},
+		}
+
+		// Answer without context
+		basicAnswer := Answer{
+			Id:        answer2Id,
+			Statement: "No, basic answer",
+			NextNode:  nil,
+		}
+
+		node := Node{
+			Id:       nodeId,
+			Question: "Mixed context question?",
+			Answers:  []Answer{answerWithContext, basicAnswer},
+		}
+
+		d.Nodes[nodeId] = node
+
+		// Test roundtrip
+		jsonData, err := d.MarshalJSON()
+		require.NoError(t, err)
+
+		newDAG := NewDAG()
+		err = newDAG.UnmarshalJSON(jsonData)
+		require.NoError(t, err)
+
+		// Verify mixed context preservation
+		retrievedNode := newDAG.Nodes[nodeId]
+
+		// First answer should have context
+		contextAnswer := retrievedNode.Answers[0]
+		assert.Equal(t, "Yes, with details", contextAnswer.Statement)
+		assert.Equal(t, "Detailed explanation here", contextAnswer.UserContext)
+		assert.Equal(t, 0.8, contextAnswer.Metadata["confidence"])
+
+		// Second answer should have no context
+		basicRetrieved := retrievedNode.Answers[1]
+		assert.Equal(t, "No, basic answer", basicRetrieved.Statement)
+		assert.Empty(t, basicRetrieved.UserContext)
+		assert.Nil(t, basicRetrieved.Metadata)
+	})
+}

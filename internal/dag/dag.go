@@ -13,6 +13,21 @@ type DAG struct {
 	Nodes map[uuid.UUID]Node
 }
 
+type Node struct {
+	Id       uuid.UUID `json:"id"`
+	Question string    `json:"question"`
+	Answers  []Answer  `json:"answers"`
+}
+
+type Answer struct {
+	Id          uuid.UUID              `json:"id"`
+	Statement   string                 `json:"answer"`
+	NextNode    *uuid.UUID             `json:"next_node"`
+	ParentNode  *Node                  `json:"-"` // Excluded from JSON to avoid circular references
+	UserContext string                 `json:"user_context,omitempty"`
+	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+}
+
 func NewDAG() DAG {
 	return DAG{
 		Id:    uuid.New(),
@@ -59,19 +74,6 @@ func (d DAG) GetRootNode() (Node, error) {
 	}
 
 	return rootNodes[0], nil
-}
-
-type Node struct {
-	Id       uuid.UUID `json:"id"`
-	Question string    `json:"question"`
-	Answers  []Answer  `json:"answers"`
-}
-
-type Answer struct {
-	Id         uuid.UUID  `json:"id"`
-	Statement  string     `json:"answer"`
-	NextNode   *uuid.UUID `json:"next_node"`
-	ParentNode *Node      `json:"-"` // Excluded from JSON to avoid circular references
 }
 
 // dagJSON represents the JSON structure for marshaling/unmarshaling a DAG
@@ -176,28 +178,28 @@ func (d DAG) Walk(nodeId uuid.UUID, fnAnswer func(Node) (Answer, error)) ([]Answ
 		}
 
 		// Validate that the selected answer belongs to this node
-		var validAnswer *Answer
-		for i, answer := range currentNode.Answers {
+		var isValid bool
+		for _, answer := range currentNode.Answers {
 			if answer.Id == selectedAnswer.Id {
-				validAnswer = &currentNode.Answers[i]
+				isValid = true
 				break
 			}
 		}
 
-		if validAnswer == nil {
+		if !isValid {
 			return path, fmt.Errorf("selected answer %s is not valid for node %s", selectedAnswer.Id, currentNodeId)
 		}
 
-		// Add the answer to the path (with parent pointer preserved)
-		path = append(path, *validAnswer)
+		// Add the enhanced answer to the path (preserving any additional context)
+		path = append(path, selectedAnswer)
 
 		// If this answer has no next node, we've reached a leaf
-		if validAnswer.NextNode == nil {
+		if selectedAnswer.NextNode == nil {
 			break
 		}
 
 		// Move to the next node
-		currentNodeId = *validAnswer.NextNode
+		currentNodeId = *selectedAnswer.NextNode
 	}
 
 	return path, nil
@@ -226,9 +228,87 @@ func CLIFnAnswer(node Node) (Answer, error) {
 		return Answer{}, fmt.Errorf("invalid choice: must be between 1 and %d", len(node.Answers))
 	}
 
-	// Return the selected answer
+	// Get the selected answer
 	selectedAnswer := node.Answers[choice-1]
 	fmt.Printf("You selected: %s\n", selectedAnswer.Statement)
 
 	return selectedAnswer, nil
+}
+
+// CLIFnAnswerWithContext is an enhanced version that collects additional user context
+func CLIFnAnswerWithContext(node Node) (Answer, error) {
+	fmt.Printf("\n%s\n", node.Question)
+	fmt.Println(strings.Repeat("-", len(node.Question)))
+
+	// Display numbered options
+	for i, answer := range node.Answers {
+		fmt.Printf("%d. %s\n", i+1, answer.Statement)
+	}
+
+	// Prompt for user input
+	fmt.Print("\nSelect your answer (enter the number): ")
+
+	var choice int
+	_, err := fmt.Scanf("%d", &choice)
+	if err != nil {
+		return Answer{}, fmt.Errorf("invalid input: %w", err)
+	}
+
+	// Validate choice
+	if choice < 1 || choice > len(node.Answers) {
+		return Answer{}, fmt.Errorf("invalid choice: must be between 1 and %d", len(node.Answers))
+	}
+
+	// Get the selected answer and create a copy for enhancement
+	selectedAnswer := node.Answers[choice-1]
+	enhancedAnswer := Answer{
+		Id:         selectedAnswer.Id,
+		Statement:  selectedAnswer.Statement,
+		NextNode:   selectedAnswer.NextNode,
+		ParentNode: selectedAnswer.ParentNode,
+		Metadata:   make(map[string]interface{}),
+	}
+
+	fmt.Printf("You selected: %s\n", selectedAnswer.Statement)
+
+	// Collect additional context (optional)
+	fmt.Print("\n--- Additional Context (Optional) ---")
+	fmt.Print("\nAdd notes or explanation (press Enter to skip): ")
+
+	// Clear the input buffer
+	var dummy string
+	fmt.Scanln(&dummy) // consume the newline from previous input
+
+	// Read user context (can be empty)
+	var userContext string
+	fmt.Scanln(&userContext)
+	if userContext != "" {
+		enhancedAnswer.UserContext = userContext
+	}
+
+	// Collect confidence level
+	fmt.Print("Confidence level 1-10 (press Enter to skip): ")
+	var confidenceStr string
+	fmt.Scanln(&confidenceStr)
+	if confidenceStr != "" {
+		var confidence int
+		_, err := fmt.Sscanf(confidenceStr, "%d", &confidence)
+		if err == nil && confidence >= 1 && confidence <= 10 {
+			enhancedAnswer.Metadata["confidence"] = float64(confidence) / 10.0
+		}
+	}
+
+	// Collect tags
+	fmt.Print("Tags (comma-separated, press Enter to skip): ")
+	var tagsStr string
+	fmt.Scanln(&tagsStr)
+	if tagsStr != "" {
+		tags := strings.Split(strings.TrimSpace(tagsStr), ",")
+		for i, tag := range tags {
+			tags[i] = strings.TrimSpace(tag)
+		}
+		enhancedAnswer.Metadata["tags"] = tags
+	}
+
+	return enhancedAnswer, nil
 }
