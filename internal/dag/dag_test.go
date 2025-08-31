@@ -91,13 +91,13 @@ func TestDAG_GetRootNode(t *testing.T) {
 
 	tests := []struct {
 		name    string
-		setup   func() DAG
+		setup   func() *DAG
 		wantErr bool
 		errMsg  string
 	}{
 		{
 			name: "finds single root node",
-			setup: func() DAG {
+			setup: func() *DAG {
 				d := NewDAG()
 				rootId := uuid.New()
 				childId := uuid.New()
@@ -127,7 +127,7 @@ func TestDAG_GetRootNode(t *testing.T) {
 		},
 		{
 			name: "returns error for empty DAG",
-			setup: func() DAG {
+			setup: func() *DAG {
 				return NewDAG()
 			},
 			wantErr: true,
@@ -135,7 +135,7 @@ func TestDAG_GetRootNode(t *testing.T) {
 		},
 		{
 			name: "returns error when no root node found",
-			setup: func() DAG {
+			setup: func() *DAG {
 				d := NewDAG()
 				node1Id := uuid.New()
 				node2Id := uuid.New()
@@ -174,7 +174,7 @@ func TestDAG_GetRootNode(t *testing.T) {
 		},
 		{
 			name: "returns error when multiple root nodes found",
-			setup: func() DAG {
+			setup: func() *DAG {
 				d := NewDAG()
 				root1Id := uuid.New()
 				root2Id := uuid.New()
@@ -224,12 +224,12 @@ func TestDAG_MarshalJSON(t *testing.T) {
 
 	tests := []struct {
 		name   string
-		setup  func() DAG
+		setup  func() *DAG
 		verify func(t *testing.T, data []byte)
 	}{
 		{
 			name: "marshals empty DAG",
-			setup: func() DAG {
+			setup: func() *DAG {
 				return NewDAG()
 			},
 			verify: func(t *testing.T, data []byte) {
@@ -239,7 +239,7 @@ func TestDAG_MarshalJSON(t *testing.T) {
 		},
 		{
 			name: "marshals DAG with single node",
-			setup: func() DAG {
+			setup: func() *DAG {
 				d := NewDAG()
 				nodeId := uuid.New()
 				answerId := uuid.New()
@@ -268,7 +268,7 @@ func TestDAG_MarshalJSON(t *testing.T) {
 		},
 		{
 			name: "marshals DAG with multiple nodes",
-			setup: func() DAG {
+			setup: func() *DAG {
 				d := NewDAG()
 				node1Id := uuid.New()
 				node2Id := uuid.New()
@@ -406,7 +406,7 @@ func TestDAG_UnmarshalJSON(t *testing.T) {
 
 			require.NoError(t, err)
 			if tt.verify != nil {
-				tt.verify(t, d)
+				tt.verify(t, *d)
 			}
 		})
 	}
@@ -417,12 +417,12 @@ func TestDAG_String(t *testing.T) {
 
 	tests := []struct {
 		name   string
-		setup  func() DAG
+		setup  func() *DAG
 		verify func(t *testing.T, result string)
 	}{
 		{
 			name: "formats empty DAG",
-			setup: func() DAG {
+			setup: func() *DAG {
 				return NewDAG()
 			},
 			verify: func(t *testing.T, result string) {
@@ -431,7 +431,7 @@ func TestDAG_String(t *testing.T) {
 		},
 		{
 			name: "formats DAG with nodes and answers",
-			setup: func() DAG {
+			setup: func() *DAG {
 				d := NewDAG()
 				nodeId := uuid.New()
 
@@ -483,7 +483,7 @@ func TestDAG_Walk(t *testing.T) {
 
 	tests := []struct {
 		name     string
-		setup    func() (DAG, uuid.UUID)
+		setup    func() (*DAG, uuid.UUID)
 		fnAnswer func(Node) (Answer, error)
 		wantPath int // Expected path length
 		wantErr  bool
@@ -491,7 +491,7 @@ func TestDAG_Walk(t *testing.T) {
 	}{
 		{
 			name: "walks through simple path",
-			setup: func() (DAG, uuid.UUID) {
+			setup: func() (*DAG, uuid.UUID) {
 				d := NewDAG()
 				rootId := uuid.New()
 				childId := uuid.New()
@@ -544,7 +544,7 @@ func TestDAG_Walk(t *testing.T) {
 		},
 		{
 			name: "stops at leaf node",
-			setup: func() (DAG, uuid.UUID) {
+			setup: func() (*DAG, uuid.UUID) {
 				d := NewDAG()
 				rootId := uuid.New()
 
@@ -564,7 +564,7 @@ func TestDAG_Walk(t *testing.T) {
 		},
 		{
 			name: "returns error for invalid node",
-			setup: func() (DAG, uuid.UUID) {
+			setup: func() (*DAG, uuid.UUID) {
 				return NewDAG(), uuid.New()
 			},
 			fnAnswer: func(node Node) (Answer, error) {
@@ -575,7 +575,7 @@ func TestDAG_Walk(t *testing.T) {
 		},
 		{
 			name: "returns error when fnAnswer fails",
-			setup: func() (DAG, uuid.UUID) {
+			setup: func() (*DAG, uuid.UUID) {
 				d := NewDAG()
 				rootId := uuid.New()
 
@@ -602,7 +602,7 @@ func TestDAG_Walk(t *testing.T) {
 		},
 		{
 			name: "returns error for invalid answer",
-			setup: func() (DAG, uuid.UUID) {
+			setup: func() (*DAG, uuid.UUID) {
 				d := NewDAG()
 				rootId := uuid.New()
 

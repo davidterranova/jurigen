@@ -28,8 +28,8 @@ type Answer struct {
 	Metadata    map[string]interface{} `json:"metadata,omitempty"`
 }
 
-func NewDAG() DAG {
-	return DAG{
+func NewDAG() *DAG {
+	return &DAG{
 		Id:    uuid.New(),
 		Nodes: make(map[uuid.UUID]Node),
 	}
