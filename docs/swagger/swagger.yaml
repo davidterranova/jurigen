@@ -1,0 +1,117 @@
+basePath: /v1
+definitions:
+  http.AnswerPresenter:
+    description: An answer to a legal question with optional user context and structured
+      metadata for evidence tracking
+    properties:
+      answer:
+        example: Yes, age discrimination occurred
+        type: string
+      id:
+        example: fc28c4b6-d185-cf56-a7e4-dead499ff1e8
+        type: string
+      metadata:
+        additionalProperties: true
+        type: object
+      user_context:
+        example: Manager explicitly mentioned my age during termination
+        type: string
+    type: object
+  http.DAGPresenter:
+    description: Legal Case DAG with questions, answers, and context
+    properties:
+      id:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      nodes:
+        items:
+          $ref: '#/definitions/http.NodePresenter'
+        type: array
+    type: object
+  http.NodePresenter:
+    description: A question node with potential answers for legal case context building
+    properties:
+      answers:
+        items:
+          $ref: '#/definitions/http.AnswerPresenter'
+        type: array
+      id:
+        example: 8b007ce4-b676-5fb3-9f93-f5f6c41cb655
+        type: string
+      question:
+        example: Were you discriminated against in the workplace?
+        type: string
+    type: object
+  xhttp.ErrorResponse:
+    description: Standard error response format for API failures
+    properties:
+      error:
+        example: DAG not found
+        type: string
+      message:
+        example: failed to get DAG
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@legaltech.example.com
+    name: Legal Tech Support
+  description: |-
+    Legal Case Context Builder API - Build context for legal cases using directed acyclic graphs
+
+    This microservice provides a context builder for legal cases using directed acyclic graphs (DAGs).
+    Users traverse through question nodes to build comprehensive case context with evidence tracking,
+    timeline management, and legal assessment capabilities.
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  title: Jurigen API
+  version: "1.0"
+paths:
+  /dags/{dagId}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a complete Legal Case DAG structure including all questions,
+        answers, and collected context
+      parameters:
+      - description: DAG unique identifier (UUID)
+        in: path
+        name: dagId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully retrieved DAG
+          schema:
+            $ref: '#/definitions/http.DAGPresenter'
+        "400":
+          description: Invalid DAG ID format
+          schema:
+            $ref: '#/definitions/xhttp.ErrorResponse'
+        "404":
+          description: DAG not found
+          schema:
+            $ref: '#/definitions/xhttp.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/xhttp.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get Legal Case DAG
+      tags:
+      - DAGs
+securityDefinitions:
+  ApiKeyAuth:
+    description: Bearer token authentication
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
+tags:
+- description: Operations for managing and retrieving Legal Case DAGs
+  name: DAGs

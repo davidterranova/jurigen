@@ -8,6 +8,15 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// ErrorResponse represents an API error response
+//
+// @Description Standard error response format for API failures
+// @Example {"message": "failed to get DAG", "error": "DAG not found"}
+type ErrorResponse struct {
+	Message string `json:"message" example:"failed to get DAG" description:"Human-readable error description"`
+	Error   string `json:"error" example:"DAG not found" description:"Technical error details"`
+}
+
 func WriteObject(ctx context.Context, w http.ResponseWriter, status int, obj any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
@@ -25,10 +34,7 @@ func WriteError(ctx context.Context, w http.ResponseWriter, status int, contextu
 		ctx,
 		w,
 		status,
-		struct {
-			Message string `json:"message"`
-			Error   string `json:"error"`
-		}{
+		ErrorResponse{
 			Message: contextualMessage,
 			Error:   err.Error(),
 		},

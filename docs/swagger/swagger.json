@@ -1,0 +1,163 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Legal Case Context Builder API - Build context for legal cases using directed acyclic graphs\n\nThis microservice provides a context builder for legal cases using directed acyclic graphs (DAGs).\nUsers traverse through question nodes to build comprehensive case context with evidence tracking,\ntimeline management, and legal assessment capabilities.",
+        "title": "Jurigen API",
+        "contact": {
+            "name": "Legal Tech Support",
+            "email": "support@legaltech.example.com"
+        },
+        "license": {
+            "name": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/v1",
+    "paths": {
+        "/dags/{dagId}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve a complete Legal Case DAG structure including all questions, answers, and collected context",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "DAGs"
+                ],
+                "summary": "Get Legal Case DAG",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "DAG unique identifier (UUID)",
+                        "name": "dagId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully retrieved DAG",
+                        "schema": {
+                            "$ref": "#/definitions/http.DAGPresenter"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid DAG ID format",
+                        "schema": {
+                            "$ref": "#/definitions/xhttp.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "DAG not found",
+                        "schema": {
+                            "$ref": "#/definitions/xhttp.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/xhttp.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "http.AnswerPresenter": {
+            "description": "An answer to a legal question with optional user context and structured metadata for evidence tracking",
+            "type": "object",
+            "properties": {
+                "answer": {
+                    "type": "string",
+                    "example": "Yes, age discrimination occurred"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "fc28c4b6-d185-cf56-a7e4-dead499ff1e8"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "user_context": {
+                    "type": "string",
+                    "example": "Manager explicitly mentioned my age during termination"
+                }
+            }
+        },
+        "http.DAGPresenter": {
+            "description": "Legal Case DAG with questions, answers, and context",
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "nodes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/http.NodePresenter"
+                    }
+                }
+            }
+        },
+        "http.NodePresenter": {
+            "description": "A question node with potential answers for legal case context building",
+            "type": "object",
+            "properties": {
+                "answers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/http.AnswerPresenter"
+                    }
+                },
+                "id": {
+                    "type": "string",
+                    "example": "8b007ce4-b676-5fb3-9f93-f5f6c41cb655"
+                },
+                "question": {
+                    "type": "string",
+                    "example": "Were you discriminated against in the workplace?"
+                }
+            }
+        },
+        "xhttp.ErrorResponse": {
+            "description": "Standard error response format for API failures",
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "DAG not found"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "failed to get DAG"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "description": "Bearer token authentication",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    },
+    "tags": [
+        {
+            "description": "Operations for managing and retrieving Legal Case DAGs",
+            "name": "DAGs"
+        }
+    ]
+}
