@@ -3,7 +3,7 @@ package port
 import (
 	"context"
 	"davidterranova/jurigen/internal/dag"
-	"davidterranova/jurigen/pkg/usecase"
+	"davidterranova/jurigen/internal/usecase"
 	"fmt"
 	"os"
 	"path/filepath"

@@ -2,14 +2,14 @@ package cmd
 
 import (
 	"context"
-	"davidterranova/jurigen/pkg"
-	"davidterranova/jurigen/pkg/port"
+	pkg "davidterranova/jurigen/internal"
+	"davidterranova/jurigen/internal/port"
 	"davidterranova/jurigen/pkg/xhttp"
 	"os"
 	"os/signal"
 	"syscall"
 
-	ihttp "davidterranova/jurigen/pkg/adapter/http"
+	ihttp "davidterranova/jurigen/internal/adapter/http"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"

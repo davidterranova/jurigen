@@ -3,7 +3,7 @@ package http
 import (
 	"context"
 	"davidterranova/jurigen/internal/dag"
-	"davidterranova/jurigen/pkg/usecase"
+	"davidterranova/jurigen/internal/usecase"
 	"davidterranova/jurigen/pkg/xhttp"
 	"errors"
 	"net/http"

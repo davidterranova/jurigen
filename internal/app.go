@@ -3,7 +3,7 @@ package pkg
 import (
 	"context"
 	"davidterranova/jurigen/internal/dag"
-	"davidterranova/jurigen/pkg/usecase"
+	"davidterranova/jurigen/internal/usecase"
 )
 
 type App struct {
