@@ -8,4 +8,4 @@ alwaysApply: true
 - Provide concise **READMEs** for services and libraries.
 - Maintain a 'CONTRIBUTING.md' and 'ARCHITECTURE.md' to guide team practices.
 - Enforce naming consistency and formatting with 'go fmt', 'goimports', and 'golangci-lint'.
-
+- Add the relevant comments when needed to build OpenAPI/Swagger documentation
