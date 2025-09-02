@@ -36,5 +36,5 @@ func (u *GetDAGUseCase) Execute(ctx context.Context, cmdGetDag CmdGetDAG) (*dag.
 		return nil, fmt.Errorf("%w: %s", ErrInvalidCommand, err)
 	}
 
-	return u.dagRepository.GetDAG(ctx, id)
+	return u.dagRepository.Get(ctx, id)
 }
