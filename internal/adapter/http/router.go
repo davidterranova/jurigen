@@ -29,6 +29,7 @@ func mountV1DAG(router *mux.Router, authFn xhttp.AuthFn, app App) {
 		v1.Use(xhttp.AuthMiddleware(authFn))
 	}
 
+	v1.HandleFunc("", dagHandler.ListDAGs).Methods(http.MethodGet)
 	v1.HandleFunc("/{"+dagId+"}", dagHandler.GetDAG).Methods(http.MethodGet)
 }
 

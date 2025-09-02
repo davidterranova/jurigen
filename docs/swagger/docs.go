@@ -22,6 +22,40 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/dags": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve a list of all available Legal Case DAG identifiers in the system",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "DAGs"
+                ],
+                "summary": "List Legal Case DAGs",
+                "responses": {
+                    "200": {
+                        "description": "Successfully retrieved DAG list",
+                        "schema": {
+                            "$ref": "#/definitions/http.DAGListPresenter"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/xhttp.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/dags/{dagId}": {
             "get": {
                 "security": [
@@ -98,6 +132,21 @@ const docTemplate = `{
                 "user_context": {
                     "type": "string",
                     "example": "Manager explicitly mentioned my age during termination"
+                }
+            }
+        },
+        "http.DAGListPresenter": {
+            "description": "List of Legal Case DAG identifiers available in the system",
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "dags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },

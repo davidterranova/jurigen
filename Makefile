@@ -1,5 +1,5 @@
 # Jurigen Legal Case Context Builder
-.PHONY: help build test clean swagger swagger-serve
+.PHONY: help build test clean swagger swagger-serve mocks mocks-clean generate
 
 # Default target
 help: ## Show this help message
@@ -27,9 +27,34 @@ clean: ## Clean build artifacts and generated files
 	rm -rf bin/
 	rm -rf docs/
 
+# Generate mocks for testing
+mocks: ## Generate all mocks for interfaces using go:generate directives
+	@echo "🔧 Generating mocks using go:generate directives..."
+	@mkdir -p internal/usecase/testdata/mocks
+	@mkdir -p internal/adapter/http/testdata/mocks
+	go generate ./internal/usecase/
+	go generate ./internal/adapter/http/
+	@echo "✅ All mocks generated using go:generate directives"
+
+# Generate all code (more idiomatic Go approach)
+generate: ## Generate all code using go:generate directives (idiomatic Go way)
+	@echo "🔧 Running go generate for all packages..."
+	go generate ./...
+	@echo "✅ Code generation complete"
+
+# Clean generated mocks
+mocks-clean: ## Remove generated mock files
+	@echo "🧹 Cleaning generated mocks..."
+	rm -rf test/mocks/
+	rm -rf internal/usecase/testdata/mocks/
+	rm -rf internal/adapter/http/testdata/mocks/
+	@echo "✅ Mocks cleaned"
+
 # Install swagger generation tool
 swagger-install: ## Install swag CLI tool
 	go install github.com/swaggo/swag/cmd/swag@latest
+
+# Note: mockgen is run via go:generate directives, no separate installation needed
 
 # Generate OpenAPI/Swagger documentation
 swagger: swagger-install ## Generate OpenAPI documentation from code annotations
@@ -84,8 +109,8 @@ dag-show: ## Show DAG structure (requires --dag flag)
 	fi
 	go run main.go dag --dag $(DAG_FILE)
 
-# Development workflow
-dev: clean test swagger ## Full development build: clean, test, and generate docs
+# Development workflow  
+dev: clean swagger generate test ## Full development build: clean, generate docs, generate code, test
 
 # Check if required tools are installed
 check-deps: ## Check if required development tools are installed

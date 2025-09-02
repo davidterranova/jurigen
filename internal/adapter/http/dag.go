@@ -8,12 +8,16 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 )
 
+//go:generate go run github.com/golang/mock/mockgen -source=dag.go -destination=testdata/mocks/app_mock.go -package=mocks
+
 type App interface {
 	GetDAG(ctx context.Context, cmd usecase.CmdGetDAG) (*dag.DAG, error)
+	ListDAGs(ctx context.Context, cmd usecase.CmdListDAGs) ([]uuid.UUID, error)
 }
 
 type dagHandler struct {
@@ -64,4 +68,28 @@ func (h *dagHandler) GetDAG(w http.ResponseWriter, r *http.Request) {
 	}
 
 	xhttp.WriteObject(ctx, w, http.StatusOK, NewDAGPresenter(dag))
+}
+
+// ListDAGs retrieves all available Legal Case DAG identifiers
+//
+// @Summary List Legal Case DAGs
+// @Description Retrieve a list of all available Legal Case DAG identifiers in the system
+// @Tags DAGs
+// @Accept json
+// @Produce json
+// @Success 200 {object} DAGListPresenter "Successfully retrieved DAG list"
+// @Failure 500 {object} xhttp.ErrorResponse "Internal server error"
+// @Security ApiKeyAuth
+// @Router /dags [get]
+func (h *dagHandler) ListDAGs(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	dagIds, err := h.app.ListDAGs(ctx, usecase.CmdListDAGs{})
+	if err != nil {
+		log.Error().Err(err).Msg("failed to list DAGs")
+		xhttp.WriteError(ctx, w, http.StatusInternalServerError, "failed to list DAGs", err)
+		return
+	}
+
+	xhttp.WriteObject(ctx, w, http.StatusOK, NewDAGListPresenter(dagIds))
 }

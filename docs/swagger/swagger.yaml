@@ -17,6 +17,16 @@ definitions:
         example: Manager explicitly mentioned my age during termination
         type: string
     type: object
+  http.DAGListPresenter:
+    description: List of Legal Case DAG identifiers available in the system
+    properties:
+      count:
+        type: integer
+      dags:
+        items:
+          type: string
+        type: array
+    type: object
   http.DAGPresenter:
     description: Legal Case DAG with questions, answers, and context
     properties:
@@ -69,6 +79,28 @@ info:
   title: Jurigen API
   version: "1.0"
 paths:
+  /dags:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of all available Legal Case DAG identifiers in
+        the system
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully retrieved DAG list
+          schema:
+            $ref: '#/definitions/http.DAGListPresenter'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/xhttp.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: List Legal Case DAGs
+      tags:
+      - DAGs
   /dags/{dagId}:
     get:
       consumes:

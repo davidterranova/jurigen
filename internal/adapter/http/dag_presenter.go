@@ -71,3 +71,19 @@ func NewAnswerPresenter(answer dag.Answer) AnswerPresenter {
 		Metadata:    answer.Metadata,
 	}
 }
+
+// DAGListPresenter represents a list of Legal Case DAG identifiers for API responses
+//
+// @Description List of Legal Case DAG identifiers available in the system
+// @Example {"dags": ["550e8400-e29b-41d4-a716-446655440000", "6ba7b810-9dad-11d1-80b4-00c04fd430c8"], "count": 2}
+type DAGListPresenter struct {
+	DAGs  []uuid.UUID `json:"dags" description:"Array of DAG unique identifiers"`
+	Count int         `json:"count" description:"Total number of DAGs available"`
+}
+
+func NewDAGListPresenter(dagIds []uuid.UUID) DAGListPresenter {
+	return DAGListPresenter{
+		DAGs:  dagIds,
+		Count: len(dagIds),
+	}
+}
