@@ -22,7 +22,7 @@ func TestNewListDAGsUseCase(t *testing.T) {
 	assert.Equal(t, mockRepo, useCase.dagRepository)
 }
 
-func TestListDAGsUseCase_Execute(t *testing.T) {
+func TestListDAGsUseCase_List(t *testing.T) {
 	tests := []struct {
 		name           string
 		setupMock      func(*mocks.MockDAGRepository)
@@ -65,7 +65,7 @@ func TestListDAGsUseCase_Execute(t *testing.T) {
 			useCase := NewListDAGsUseCase(mockRepo)
 			ctx := context.Background()
 
-			result, err := useCase.Execute(ctx, CmdListDAGs{})
+			result, err := useCase.List(ctx, CmdListDAGs{})
 
 			if tt.expectError {
 				assert.Error(t, err)

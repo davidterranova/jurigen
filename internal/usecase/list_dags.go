@@ -20,6 +20,6 @@ func NewListDAGsUseCase(dagRepository DAGRepository) *ListDAGsUseCase {
 	}
 }
 
-func (u *ListDAGsUseCase) Execute(ctx context.Context, cmd CmdListDAGs) ([]uuid.UUID, error) {
+func (u *ListDAGsUseCase) List(ctx context.Context, cmd CmdListDAGs) ([]uuid.UUID, error) {
 	return u.dagRepository.List(ctx)
 }

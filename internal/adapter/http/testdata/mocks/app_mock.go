@@ -37,32 +37,32 @@ func (m *MockApp) EXPECT() *MockAppMockRecorder {
 	return m.recorder
 }
 
-// GetDAG mocks base method.
-func (m *MockApp) GetDAG(ctx context.Context, cmd usecase.CmdGetDAG) (*dag.DAG, error) {
+// Get mocks base method.
+func (m *MockApp) Get(ctx context.Context, cmd usecase.CmdGetDAG) (*dag.DAG, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetDAG", ctx, cmd)
+	ret := m.ctrl.Call(m, "Get", ctx, cmd)
 	ret0, _ := ret[0].(*dag.DAG)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetDAG indicates an expected call of GetDAG.
-func (mr *MockAppMockRecorder) GetDAG(ctx, cmd interface{}) *gomock.Call {
+// Get indicates an expected call of Get.
+func (mr *MockAppMockRecorder) Get(ctx, cmd interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDAG", reflect.TypeOf((*MockApp)(nil).GetDAG), ctx, cmd)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockApp)(nil).Get), ctx, cmd)
 }
 
-// ListDAGs mocks base method.
-func (m *MockApp) ListDAGs(ctx context.Context, cmd usecase.CmdListDAGs) ([]uuid.UUID, error) {
+// List mocks base method.
+func (m *MockApp) List(ctx context.Context, cmd usecase.CmdListDAGs) ([]uuid.UUID, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListDAGs", ctx, cmd)
+	ret := m.ctrl.Call(m, "List", ctx, cmd)
 	ret0, _ := ret[0].([]uuid.UUID)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// ListDAGs indicates an expected call of ListDAGs.
-func (mr *MockAppMockRecorder) ListDAGs(ctx, cmd interface{}) *gomock.Call {
+// List indicates an expected call of List.
+func (mr *MockAppMockRecorder) List(ctx, cmd interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListDAGs", reflect.TypeOf((*MockApp)(nil).ListDAGs), ctx, cmd)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockApp)(nil).List), ctx, cmd)
 }

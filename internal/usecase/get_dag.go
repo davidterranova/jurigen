@@ -25,7 +25,7 @@ func NewGetDAGUseCase(dagRepository DAGRepository) *GetDAGUseCase {
 	}
 }
 
-func (u *GetDAGUseCase) Execute(ctx context.Context, cmdGetDag CmdGetDAG) (*dag.DAG, error) {
+func (u *GetDAGUseCase) Get(ctx context.Context, cmdGetDag CmdGetDAG) (*dag.DAG, error) {
 	err := u.validator.Struct(cmdGetDag)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s (%v)", ErrInvalidCommand, err, cmdGetDag)

@@ -27,7 +27,7 @@ func TestNewDAGHandler(t *testing.T) {
 	assert.Equal(t, mockApp, handler.app)
 }
 
-func TestDAGHandler_ListDAGs(t *testing.T) {
+func TestDAGHandler_List(t *testing.T) {
 	tests := []struct {
 		name           string
 		setupMock      func(*mocks.MockApp)
@@ -41,7 +41,7 @@ func TestDAGHandler_ListDAGs(t *testing.T) {
 					uuid.MustParse("550e8400-e29b-41d4-a716-446655440000"),
 					uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c8"),
 				}
-				mockApp.EXPECT().ListDAGs(gomock.Any(), usecase.CmdListDAGs{}).Return(dagIds, nil)
+				mockApp.EXPECT().List(gomock.Any(), usecase.CmdListDAGs{}).Return(dagIds, nil)
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, rr *httptest.ResponseRecorder) {
@@ -58,7 +58,7 @@ func TestDAGHandler_ListDAGs(t *testing.T) {
 		{
 			name: "returns empty list when no DAGs exist",
 			setupMock: func(mockApp *mocks.MockApp) {
-				mockApp.EXPECT().ListDAGs(gomock.Any(), usecase.CmdListDAGs{}).Return([]uuid.UUID{}, nil)
+				mockApp.EXPECT().List(gomock.Any(), usecase.CmdListDAGs{}).Return([]uuid.UUID{}, nil)
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, rr *httptest.ResponseRecorder) {
@@ -73,7 +73,7 @@ func TestDAGHandler_ListDAGs(t *testing.T) {
 		{
 			name: "returns 500 when app layer fails",
 			setupMock: func(mockApp *mocks.MockApp) {
-				mockApp.EXPECT().ListDAGs(gomock.Any(), usecase.CmdListDAGs{}).Return([]uuid.UUID{}, usecase.ErrInternal)
+				mockApp.EXPECT().List(gomock.Any(), usecase.CmdListDAGs{}).Return([]uuid.UUID{}, usecase.ErrInternal)
 			},
 			expectedStatus: http.StatusInternalServerError,
 			checkResponse: func(t *testing.T, rr *httptest.ResponseRecorder) {
@@ -97,7 +97,7 @@ func TestDAGHandler_ListDAGs(t *testing.T) {
 
 			rr := httptest.NewRecorder()
 
-			handler.ListDAGs(rr, req)
+			handler.List(rr, req)
 
 			assert.Equal(t, tt.expectedStatus, rr.Code)
 			assert.Equal(t, "application/json", rr.Header().Get("Content-Type"))
@@ -123,7 +123,7 @@ func TestDAGHandler_GetDAG(t *testing.T) {
 			name:  "successfully returns DAG",
 			dagId: testDAG.Id.String(),
 			setupMock: func(mockApp *mocks.MockApp) {
-				mockApp.EXPECT().GetDAG(gomock.Any(), usecase.CmdGetDAG{DAGId: testDAG.Id.String()}).Return(testDAG, nil)
+				mockApp.EXPECT().Get(gomock.Any(), usecase.CmdGetDAG{DAGId: testDAG.Id.String()}).Return(testDAG, nil)
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, rr *httptest.ResponseRecorder) {
@@ -137,7 +137,7 @@ func TestDAGHandler_GetDAG(t *testing.T) {
 			name:  "returns 400 for invalid UUID",
 			dagId: "invalid-uuid",
 			setupMock: func(mockApp *mocks.MockApp) {
-				mockApp.EXPECT().GetDAG(gomock.Any(), usecase.CmdGetDAG{DAGId: "invalid-uuid"}).Return(nil, usecase.ErrInvalidCommand)
+				mockApp.EXPECT().Get(gomock.Any(), usecase.CmdGetDAG{DAGId: "invalid-uuid"}).Return(nil, usecase.ErrInvalidCommand)
 			},
 			expectedStatus: http.StatusBadRequest,
 			checkResponse: func(t *testing.T, rr *httptest.ResponseRecorder) {
@@ -148,7 +148,7 @@ func TestDAGHandler_GetDAG(t *testing.T) {
 			name:  "returns 404 when DAG not found",
 			dagId: testDAG.Id.String(),
 			setupMock: func(mockApp *mocks.MockApp) {
-				mockApp.EXPECT().GetDAG(gomock.Any(), usecase.CmdGetDAG{DAGId: testDAG.Id.String()}).Return(nil, usecase.ErrNotFound)
+				mockApp.EXPECT().Get(gomock.Any(), usecase.CmdGetDAG{DAGId: testDAG.Id.String()}).Return(nil, usecase.ErrNotFound)
 			},
 			expectedStatus: http.StatusNotFound,
 			checkResponse: func(t *testing.T, rr *httptest.ResponseRecorder) {
@@ -175,7 +175,7 @@ func TestDAGHandler_GetDAG(t *testing.T) {
 
 			rr := httptest.NewRecorder()
 
-			handler.GetDAG(rr, req)
+			handler.Get(rr, req)
 
 			assert.Equal(t, tt.expectedStatus, rr.Code)
 

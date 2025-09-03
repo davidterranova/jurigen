@@ -9,29 +9,35 @@ import (
 )
 
 type App struct {
-	getDAGUseCase   GetDAGUseCase
-	listDAGsUseCase ListDAGsUseCase
+	dagUseCase *dagUseCase
+}
+
+type dagUseCase struct {
+	GetDAGUseCase
+	ListDAGsUseCase
 }
 
 type GetDAGUseCase interface {
-	Execute(ctx context.Context, cmd usecase.CmdGetDAG) (*dag.DAG, error)
+	Get(ctx context.Context, cmd usecase.CmdGetDAG) (*dag.DAG, error)
 }
 
 type ListDAGsUseCase interface {
-	Execute(ctx context.Context, cmd usecase.CmdListDAGs) ([]uuid.UUID, error)
+	List(ctx context.Context, cmd usecase.CmdListDAGs) ([]uuid.UUID, error)
 }
 
 func New(dagRepository usecase.DAGRepository) *App {
 	return &App{
-		getDAGUseCase:   usecase.NewGetDAGUseCase(dagRepository),
-		listDAGsUseCase: usecase.NewListDAGsUseCase(dagRepository),
+		dagUseCase: &dagUseCase{
+			usecase.NewGetDAGUseCase(dagRepository),
+			usecase.NewListDAGsUseCase(dagRepository),
+		},
 	}
 }
 
-func (a *App) GetDAG(ctx context.Context, cmd usecase.CmdGetDAG) (*dag.DAG, error) {
-	return a.getDAGUseCase.Execute(ctx, cmd)
+func (a *App) Get(ctx context.Context, cmd usecase.CmdGetDAG) (*dag.DAG, error) {
+	return a.dagUseCase.Get(ctx, cmd)
 }
 
-func (a *App) ListDAGs(ctx context.Context, cmd usecase.CmdListDAGs) ([]uuid.UUID, error) {
-	return a.listDAGsUseCase.Execute(ctx, cmd)
+func (a *App) List(ctx context.Context, cmd usecase.CmdListDAGs) ([]uuid.UUID, error) {
+	return a.dagUseCase.List(ctx, cmd)
 }

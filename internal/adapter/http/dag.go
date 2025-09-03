@@ -16,8 +16,8 @@ import (
 //go:generate go run github.com/golang/mock/mockgen -source=dag.go -destination=testdata/mocks/app_mock.go -package=mocks
 
 type App interface {
-	GetDAG(ctx context.Context, cmd usecase.CmdGetDAG) (*dag.DAG, error)
-	ListDAGs(ctx context.Context, cmd usecase.CmdListDAGs) ([]uuid.UUID, error)
+	Get(ctx context.Context, cmd usecase.CmdGetDAG) (*dag.DAG, error)
+	List(ctx context.Context, cmd usecase.CmdListDAGs) ([]uuid.UUID, error)
 }
 
 type dagHandler struct {
@@ -30,7 +30,7 @@ func NewDAGHandler(app App) *dagHandler {
 	}
 }
 
-// GetDAG retrieves a specific Legal Case DAG by its unique identifier
+// Get retrieves a specific Legal Case DAG by its unique identifier
 //
 // @Summary Get Legal Case DAG
 // @Description Retrieve a complete Legal Case DAG structure including all questions, answers, and collected context
@@ -44,12 +44,12 @@ func NewDAGHandler(app App) *dagHandler {
 // @Failure 500 {object} xhttp.ErrorResponse "Internal server error"
 // @Security ApiKeyAuth
 // @Router /dags/{dagId} [get]
-func (h *dagHandler) GetDAG(w http.ResponseWriter, r *http.Request) {
+func (h *dagHandler) Get(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	id := mux.Vars(r)[dagId]
 
-	dag, err := h.app.GetDAG(ctx, usecase.CmdGetDAG{
+	dag, err := h.app.Get(ctx, usecase.CmdGetDAG{
 		DAGId: id,
 	})
 	if err != nil {
@@ -70,7 +70,7 @@ func (h *dagHandler) GetDAG(w http.ResponseWriter, r *http.Request) {
 	xhttp.WriteObject(ctx, w, http.StatusOK, NewDAGPresenter(dag))
 }
 
-// ListDAGs retrieves all available Legal Case DAG identifiers
+// List retrieves all available Legal Case DAG identifiers
 //
 // @Summary List Legal Case DAGs
 // @Description Retrieve a list of all available Legal Case DAG identifiers in the system
@@ -81,10 +81,10 @@ func (h *dagHandler) GetDAG(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} xhttp.ErrorResponse "Internal server error"
 // @Security ApiKeyAuth
 // @Router /dags [get]
-func (h *dagHandler) ListDAGs(w http.ResponseWriter, r *http.Request) {
+func (h *dagHandler) List(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	dagIds, err := h.app.ListDAGs(ctx, usecase.CmdListDAGs{})
+	dagIds, err := h.app.List(ctx, usecase.CmdListDAGs{})
 	if err != nil {
 		log.Error().Err(err).Msg("failed to list DAGs")
 		xhttp.WriteError(ctx, w, http.StatusInternalServerError, "failed to list DAGs", err)
