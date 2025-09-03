@@ -1,5 +1,5 @@
 # Jurigen Legal Case Context Builder
-.PHONY: help build test clean swagger swagger-serve mocks mocks-clean generate
+.PHONY: help build test clean swagger swagger-serve mocks mocks-clean generate lint lint-install
 
 # Default target
 help: ## Show this help message
@@ -56,6 +56,18 @@ swagger-install: ## Install swag CLI tool
 
 # Note: mockgen is run via go:generate directives, no separate installation needed
 
+# Install golangci-lint tool
+lint-install: ## Install golangci-lint CLI tool
+	@echo "📦 Installing golangci-lint (latest version)..."
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin latest
+	@echo "✅ golangci-lint installed"
+
+# Run code linting
+lint: ## Run golangci-lint on the codebase
+	@echo "🔍 Running golangci-lint..."
+	@export PATH=$$PATH:$(shell go env GOPATH)/bin && golangci-lint run ./...
+	@echo "✅ Linting completed"
+
 # Generate OpenAPI/Swagger documentation
 swagger: swagger-install ## Generate OpenAPI documentation from code annotations
 	@echo "🔄 Generating OpenAPI/Swagger documentation..."
@@ -78,10 +90,6 @@ swagger-serve: ## Serve Swagger UI locally (requires swagger generation first)
 # Format code
 fmt: ## Format Go code
 	go fmt ./...
-
-# Lint code
-lint: ## Run linter
-	golangci-lint run
 
 # Run the server
 server: ## Start the HTTP API server
@@ -110,13 +118,16 @@ dag-show: ## Show DAG structure (requires --dag flag)
 	go run main.go dag --dag $(DAG_FILE)
 
 # Development workflow  
-dev: clean swagger generate test ## Full development build: clean, generate docs, generate code, test
+dev: clean swagger generate lint test ## Full development build: clean, generate docs, generate code, lint, test
 
 # Check if required tools are installed
 check-deps: ## Check if required development tools are installed
 	@echo "🔍 Checking development dependencies..."
 	@command -v go >/dev/null 2>&1 || { echo "❌ Go is not installed"; exit 1; }
 	@echo "✅ Go is installed: $$(go version)"
-	@command -v golangci-lint >/dev/null 2>&1 || { echo "⚠️  golangci-lint not installed (optional for linting)"; }
-	@command -v python3 >/dev/null 2>&1 || { echo "⚠️  python3 not installed (needed for swagger-serve)"; }
-	@echo "✅ Development environment ready"
+	@if command -v golangci-lint >/dev/null 2>&1; then \
+		echo "✅ golangci-lint is installed: $$(golangci-lint version --short)"; \
+	else \
+		echo "⚠️  golangci-lint not installed, run 'make lint-install'"; \
+	fi
+	@echo "✅ Development dependency check completed"
