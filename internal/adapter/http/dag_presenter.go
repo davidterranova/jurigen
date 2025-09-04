@@ -59,6 +59,7 @@ func NewNodePresenter(node dag.Node) NodePresenter {
 type AnswerPresenter struct {
 	Id          uuid.UUID              `json:"id" example:"fc28c4b6-d185-cf56-a7e4-dead499ff1e8" description:"Unique identifier for the answer"`
 	Statement   string                 `json:"answer" example:"Yes, age discrimination occurred" description:"The answer statement or response"`
+	NextNode    *uuid.UUID             `json:"next_node,omitempty" example:"8b007ce4-b676-5fb3-9f93-f5f6c41cb655" description:"ID of the next node to navigate to (null for leaf nodes)"`
 	UserContext string                 `json:"user_context,omitempty" example:"Manager explicitly mentioned my age during termination" description:"Free-form user notes and context for this answer"`
 	Metadata    map[string]interface{} `json:"metadata,omitempty" description:"Structured metadata for legal assessment: confidence scores, evidence tracking, damages estimates, action items, etc."`
 }
@@ -67,6 +68,7 @@ func NewAnswerPresenter(answer dag.Answer) AnswerPresenter {
 	return AnswerPresenter{
 		Id:          answer.Id,
 		Statement:   answer.Statement,
+		NextNode:    answer.NextNode,
 		UserContext: answer.UserContext,
 		Metadata:    answer.Metadata,
 	}
@@ -85,5 +87,42 @@ func NewDAGListPresenter(dagIds []uuid.UUID) DAGListPresenter {
 	return DAGListPresenter{
 		DAGs:  dagIds,
 		Count: len(dagIds),
+	}
+}
+
+// presenterToDAG converts a DAGPresenter to a DAG struct
+func (h *dagHandler) presenterToDAG(presenter DAGPresenter) *dag.DAG {
+	nodes := make(map[uuid.UUID]dag.Node)
+
+	for _, nodePresenter := range presenter.Nodes {
+		answers := make([]dag.Answer, len(nodePresenter.Answers))
+
+		for i, answerPresenter := range nodePresenter.Answers {
+			answers[i] = dag.Answer{
+				Id:          answerPresenter.Id,
+				Statement:   answerPresenter.Statement,
+				NextNode:    answerPresenter.NextNode,
+				UserContext: answerPresenter.UserContext,
+				Metadata:    answerPresenter.Metadata,
+			}
+		}
+
+		node := dag.Node{
+			Id:       nodePresenter.Id,
+			Question: nodePresenter.Question,
+			Answers:  answers,
+		}
+
+		// Set parent pointers for answers
+		for i := range node.Answers {
+			node.Answers[i].ParentNode = &node
+		}
+
+		nodes[node.Id] = node
+	}
+
+	return &dag.DAG{
+		Id:    presenter.Id,
+		Nodes: nodes,
 	}
 }
