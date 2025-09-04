@@ -1,5 +1,5 @@
 # Jurigen Legal Case Context Builder
-.PHONY: help build test clean swagger swagger-serve mocks mocks-clean generate lint lint-install
+.PHONY: help build test clean swagger swagger-serve mocks mocks-clean generate lint lint-install workflow-branch workflow-commit workflow-pr workflow-full
 
 # Default target
 help: ## Show this help message
@@ -130,4 +130,46 @@ check-deps: ## Check if required development tools are installed
 	else \
 		echo "⚠️  golangci-lint not installed, run 'make lint-install'"; \
 	fi
+	@if command -v gh >/dev/null 2>&1; then \
+		echo "✅ GitHub CLI is installed: $$(gh --version | head -1)"; \
+	else \
+		echo "⚠️  GitHub CLI not installed (optional for PR automation)"; \
+	fi
 	@echo "✅ Development dependency check completed"
+
+##############################################################################
+# Workflow Automation
+##############################################################################
+
+# Create a new feature branch following naming conventions
+workflow-branch: ## Create a new feature branch (Usage: make workflow-branch TYPE=feature NAME=my-feature)
+	@if [ -z "$(TYPE)" ] || [ -z "$(NAME)" ]; then \
+		echo "❌ Usage: make workflow-branch TYPE=feature NAME=my-feature"; \
+		echo "📋 Types: feature, bugfix, hotfix, refactor, docs, test"; \
+		exit 1; \
+	fi
+	@./scripts/workflow-automation.sh branch $(TYPE) "$(NAME)"
+
+# Auto-commit staged changes with conventional commit message
+workflow-commit: ## Auto-create conventional commit for staged changes
+	@./scripts/workflow-automation.sh commit
+
+# Create PR with auto-generated description
+workflow-pr: ## Create Pull Request with auto-generated description
+	@./scripts/workflow-automation.sh pr create
+
+# Generate PR template only
+workflow-pr-template: ## Generate PR description template without creating PR
+	@./scripts/workflow-automation.sh pr template
+
+# Full automated workflow setup
+workflow-full: ## Full workflow: create branch and setup (Usage: make workflow-full NAME=my-feature [TYPE=feature])
+	@if [ -z "$(NAME)" ]; then \
+		echo "❌ Usage: make workflow-full NAME=my-feature [TYPE=feature]"; \
+		exit 1; \
+	fi
+	@./scripts/workflow-automation.sh workflow "$(NAME)" "$(or $(TYPE),feature)"
+
+# Show workflow help
+workflow-help: ## Show detailed workflow automation help
+	@./scripts/workflow-automation.sh help

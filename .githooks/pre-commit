@@ -1,0 +1,52 @@
+#!/bin/bash
+
+# Pre-commit hook for Jurigen project
+# Ensures code quality and conventional commit compliance
+
+set -e
+
+echo "🔍 Running pre-commit checks..."
+
+# Check if we're in the right directory
+if [ ! -f "go.mod" ] || [ ! -f "Makefile" ]; then
+    echo "❌ Not in project root directory"
+    exit 1
+fi
+
+# Run linting
+echo "🔍 Running linter..."
+if ! make lint >/dev/null 2>&1; then
+    echo "❌ Linting failed. Fix errors before committing."
+    make lint
+    exit 1
+fi
+
+# Run tests
+echo "🧪 Running tests..."
+if ! make test >/dev/null 2>&1; then
+    echo "❌ Tests failed. Fix failing tests before committing."
+    make test
+    exit 1
+fi
+
+# Generate code if needed
+echo "🔧 Checking code generation..."
+if ! git diff --exit-code --quiet internal/*/testdata/mocks/ 2>/dev/null; then
+    echo "⚠️  Mock files appear out of sync. Regenerating..."
+    make generate >/dev/null
+fi
+
+# Check for common issues
+echo "🔍 Checking for common issues..."
+
+# Check for debug prints
+if git diff --cached --name-only | grep '\.go$' | xargs grep -l "fmt\.Print\|log\.Print" 2>/dev/null; then
+    echo "⚠️  Found debug print statements. Consider removing or using proper logging."
+fi
+
+# Check for TODO/FIXME comments in staged changes
+if git diff --cached | grep -E "TODO|FIXME|XXX" >/dev/null 2>&1; then
+    echo "⚠️  Found TODO/FIXME comments in staged changes. Consider addressing or tracking them."
+fi
+
+echo "✅ Pre-commit checks passed!"

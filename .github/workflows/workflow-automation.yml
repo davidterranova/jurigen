@@ -1,0 +1,117 @@
+# GitHub Actions Workflow for Automated Development Workflow
+name: Workflow Automation
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Workflow action to perform'
+        required: true
+        default: 'validate'
+        type: choice
+        options:
+          - validate
+          - auto-commit
+          - pr-check
+      branch_name:
+        description: 'Branch name (for validation)'
+        required: false
+        type: string
+
+jobs:
+  workflow-automation:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+      
+      - name: Install dependencies
+        run: |
+          go mod download
+          make lint-install
+      
+      - name: Validate branch naming
+        if: github.event.inputs.action == 'validate'
+        run: |
+          BRANCH_NAME="${{ github.event.inputs.branch_name || github.ref_name }}"
+          echo "Validating branch: $BRANCH_NAME"
+          
+          # Check branch naming convention
+          if [[ "$BRANCH_NAME" =~ ^(feature|bugfix|hotfix|refactor|docs|test)/.+$ ]]; then
+            echo "✅ Branch naming follows convention: $BRANCH_NAME"
+          elif [[ "$BRANCH_NAME" == "main" || "$BRANCH_NAME" == "develop" ]]; then
+            echo "✅ Protected branch: $BRANCH_NAME"
+          else
+            echo "❌ Branch name does not follow convention"
+            echo "Expected: {feature|bugfix|hotfix|refactor|docs|test}/description"
+            echo "Got: $BRANCH_NAME"
+            exit 1
+          fi
+      
+      - name: Validate commit messages
+        if: github.event.inputs.action == 'validate' || github.event.inputs.action == 'pr-check'
+        run: |
+          echo "Validating recent commit messages..."
+          
+          # Get commits in current branch vs main
+          COMMITS=$(git log --oneline origin/main..HEAD || git log --oneline -10)
+          
+          if [ -z "$COMMITS" ]; then
+            echo "No commits to validate"
+            exit 0
+          fi
+          
+          echo "$COMMITS" | while read -r commit; do
+            MSG=$(echo "$commit" | cut -d' ' -f2-)
+            echo "Checking: $MSG"
+            
+            # Validate conventional commit format
+            if [[ "$MSG" =~ ^(feat|fix|docs|style|refactor|test|chore|build)(\(.+\))?: .{1,50}$ ]]; then
+              echo "✅ Valid: $MSG"
+            else
+              echo "❌ Invalid conventional commit: $MSG"
+              echo "Expected format: type(scope): description"
+              echo "Types: feat, fix, docs, style, refactor, test, chore, build"
+              exit 1
+            fi
+          done
+      
+      - name: Run full development workflow
+        if: github.event.inputs.action == 'auto-commit' || github.event.inputs.action == 'pr-check'
+        run: |
+          echo "Running development workflow checks..."
+          make dev
+      
+      - name: PR readiness check
+        if: github.event.inputs.action == 'pr-check'
+        run: |
+          echo "Checking PR readiness..."
+          
+          # Check if PR description exists
+          if [ -f "PR_DESCRIPTION.md" ]; then
+            echo "✅ PR description found"
+            echo "Preview:"
+            head -20 PR_DESCRIPTION.md
+          else
+            echo "⚠️  No PR description found. Generating..."
+            ./scripts/workflow-automation.sh pr template
+          fi
+          
+          # Check test coverage
+          echo "Running test coverage check..."
+          COVERAGE=$(go test -cover ./... | grep -E "coverage: [0-9]+\.[0-9]+%" | tail -1 | grep -oE "[0-9]+\.[0-9]+")
+          echo "Test coverage: ${COVERAGE}%"
+          
+          if (( $(echo "$COVERAGE > 70" | bc -l) )); then
+            echo "✅ Test coverage is adequate: ${COVERAGE}%"
+          else
+            echo "⚠️  Test coverage is low: ${COVERAGE}% (recommended: >70%)"
+          fi
