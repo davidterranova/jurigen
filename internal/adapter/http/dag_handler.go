@@ -5,6 +5,7 @@ import (
 	"davidterranova/jurigen/internal/dag"
 	"davidterranova/jurigen/internal/usecase"
 	"davidterranova/jurigen/pkg/xhttp"
+	"encoding/json"
 	"errors"
 	"net/http"
 
@@ -13,11 +14,12 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-//go:generate go run github.com/golang/mock/mockgen -source=dag.go -destination=testdata/mocks/app_mock.go -package=mocks
+//go:generate go run github.com/golang/mock/mockgen -source=dag_handler.go -destination=testdata/mocks/app_mock.go -package=mocks
 
 type App interface {
 	Get(ctx context.Context, cmd usecase.CmdGetDAG) (*dag.DAG, error)
 	List(ctx context.Context, cmd usecase.CmdListDAGs) ([]uuid.UUID, error)
+	Update(ctx context.Context, cmd usecase.CmdUpdateDAG) (*dag.DAG, error)
 }
 
 type dagHandler struct {
@@ -92,4 +94,59 @@ func (h *dagHandler) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	xhttp.WriteObject(ctx, w, http.StatusOK, NewDAGListPresenter(dagIds))
+}
+
+// Update modifies an existing Legal Case DAG with new content
+//
+// @Summary Update Legal Case DAG
+// @Description Update a complete Legal Case DAG structure including questions, answers, and context
+// @Tags DAGs
+// @Accept json
+// @Produce json
+// @Param dagId path string true "DAG unique identifier (UUID)"
+// @Param dag body DAGPresenter true "Updated DAG structure"
+// @Success 200 {object} DAGPresenter "Successfully updated DAG"
+// @Failure 400 {object} xhttp.ErrorResponse "Invalid request body or DAG ID format"
+// @Failure 404 {object} xhttp.ErrorResponse "DAG not found"
+// @Failure 500 {object} xhttp.ErrorResponse "Internal server error"
+// @Security ApiKeyAuth
+// @Router /dags/{dagId} [put]
+func (h *dagHandler) Update(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	id := mux.Vars(r)[dagId]
+
+	// Parse the request body
+	var dagRequest DAGPresenter
+	err := json.NewDecoder(r.Body).Decode(&dagRequest)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to decode request body")
+		xhttp.WriteError(ctx, w, http.StatusBadRequest, "invalid request body", err)
+		return
+	}
+
+	// Convert presenter to DAG
+	dagToUpdate := h.presenterToDAG(dagRequest)
+
+	// Execute the update
+	updatedDAG, err := h.app.Update(ctx, usecase.CmdUpdateDAG{
+		DAGId: id,
+		DAG:   dagToUpdate,
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("failed to update DAG")
+		switch {
+		case errors.Is(err, usecase.ErrInvalidCommand):
+			xhttp.WriteError(ctx, w, http.StatusBadRequest, "invalid DAG data", err)
+			return
+		case errors.Is(err, usecase.ErrNotFound):
+			xhttp.WriteError(ctx, w, http.StatusNotFound, "DAG not found", err)
+			return
+		default:
+			xhttp.WriteError(ctx, w, http.StatusInternalServerError, "failed to update DAG", err)
+			return
+		}
+	}
+
+	xhttp.WriteObject(ctx, w, http.StatusOK, NewDAGPresenter(updatedDAG))
 }
