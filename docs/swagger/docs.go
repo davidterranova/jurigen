@@ -109,6 +109,68 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update a complete Legal Case DAG structure including questions, answers, and context",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "DAGs"
+                ],
+                "summary": "Update Legal Case DAG",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "DAG unique identifier (UUID)",
+                        "name": "dagId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated DAG structure",
+                        "name": "dag",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.DAGPresenter"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully updated DAG",
+                        "schema": {
+                            "$ref": "#/definitions/http.DAGPresenter"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or DAG ID format",
+                        "schema": {
+                            "$ref": "#/definitions/xhttp.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "DAG not found",
+                        "schema": {
+                            "$ref": "#/definitions/xhttp.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/xhttp.ErrorResponse"
+                        }
+                    }
+                }
             }
         }
     },
@@ -128,6 +190,10 @@ const docTemplate = `{
                 "metadata": {
                     "type": "object",
                     "additionalProperties": true
+                },
+                "next_node": {
+                    "type": "string",
+                    "example": "8b007ce4-b676-5fb3-9f93-f5f6c41cb655"
                 },
                 "user_context": {
                     "type": "string",

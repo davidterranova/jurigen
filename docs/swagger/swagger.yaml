@@ -13,6 +13,9 @@ definitions:
       metadata:
         additionalProperties: true
         type: object
+      next_node:
+        example: 8b007ce4-b676-5fb3-9f93-f5f6c41cb655
+        type: string
       user_context:
         example: Manager explicitly mentioned my age during termination
         type: string
@@ -135,6 +138,47 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get Legal Case DAG
+      tags:
+      - DAGs
+    put:
+      consumes:
+      - application/json
+      description: Update a complete Legal Case DAG structure including questions,
+        answers, and context
+      parameters:
+      - description: DAG unique identifier (UUID)
+        in: path
+        name: dagId
+        required: true
+        type: string
+      - description: Updated DAG structure
+        in: body
+        name: dag
+        required: true
+        schema:
+          $ref: '#/definitions/http.DAGPresenter'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully updated DAG
+          schema:
+            $ref: '#/definitions/http.DAGPresenter'
+        "400":
+          description: Invalid request body or DAG ID format
+          schema:
+            $ref: '#/definitions/xhttp.ErrorResponse'
+        "404":
+          description: DAG not found
+          schema:
+            $ref: '#/definitions/xhttp.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/xhttp.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update Legal Case DAG
       tags:
       - DAGs
 securityDefinitions:
