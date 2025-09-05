@@ -64,63 +64,18 @@ func (u *UpdateDAGUseCase) Execute(ctx context.Context, cmd CmdUpdateDAG) (*dag.
 	return updatedDAG, nil
 }
 
-// validateDAGStructure performs structural validation on the DAG
+// validateDAGStructure performs comprehensive structural validation on the DAG
 func (u *UpdateDAGUseCase) validateDAGStructure(d *dag.DAG) error {
-	if d == nil {
-		return fmt.Errorf("DAG cannot be nil")
-	}
+	validator := NewDAGValidator()
+	result := validator.ValidateDAG(d)
 
-	if d.Id == uuid.Nil {
-		return fmt.Errorf("DAG ID cannot be empty")
-	}
-
-	if d.Title == "" {
-		return fmt.Errorf("DAG title cannot be empty")
-	}
-
-	// Validate nodes
-	if len(d.Nodes) == 0 {
-		return fmt.Errorf("DAG must contain at least one node")
-	}
-
-	// Validate each node
-	for nodeId, node := range d.Nodes {
-		if nodeId != node.Id {
-			return fmt.Errorf("node map key %s does not match node ID %s", nodeId, node.Id)
+	if !result.IsValid {
+		// Combine all error messages into a single error
+		var errorMessages []string
+		for _, err := range result.Errors {
+			errorMessages = append(errorMessages, err.Message)
 		}
-
-		if node.Question == "" {
-			return fmt.Errorf("node %s must have a non-empty question", node.Id)
-		}
-
-		// Validate answers
-		for i, answer := range node.Answers {
-			if answer.Id == uuid.Nil {
-				return fmt.Errorf("answer %d in node %s must have a valid ID", i, node.Id)
-			}
-
-			if answer.Statement == "" {
-				return fmt.Errorf("answer %s in node %s must have a non-empty statement", answer.Id, node.Id)
-			}
-
-			// If NextNode is specified, validate it exists in the DAG
-			if answer.NextNode != nil {
-				if _, exists := d.Nodes[*answer.NextNode]; !exists {
-					return fmt.Errorf("answer %s references non-existent next node %s", answer.Id, *answer.NextNode)
-				}
-			}
-		}
-	}
-
-	// Validate DAG has exactly one root node
-	rootNode, err := d.GetRootNode()
-	if err != nil {
-		return fmt.Errorf("DAG structure validation failed: %s", err.Error())
-	}
-
-	// Ensure root node exists in the nodes map
-	if _, exists := d.Nodes[rootNode.Id]; !exists {
-		return fmt.Errorf("root node %s not found in nodes map", rootNode.Id)
+		return fmt.Errorf("DAG validation failed: %v", errorMessages)
 	}
 
 	return nil
