@@ -9,9 +9,10 @@ import (
 // DAGPresenter represents a complete Legal Case DAG structure for API responses
 //
 // @Description Legal Case DAG with questions, answers, and context
-// @Example {"id": "550e8400-e29b-41d4-a716-446655440000", "nodes": [{"id": "8b007ce4-b676-5fb3-9f93-f5f6c41cb655", "question": "Were you discriminated against?", "answers": [{"id": "fc28c4b6-d185-cf56-a7e4-dead499ff1e8", "answer": "Yes, age discrimination occurred", "user_context": "Manager explicitly mentioned my age", "metadata": {"confidence": 0.9, "tags": ["age_discrimination"]}}]}]}
+// @Example {"id": "550e8400-e29b-41d4-a716-446655440000", "title": "Employment Discrimination Case", "nodes": [{"id": "8b007ce4-b676-5fb3-9f93-f5f6c41cb655", "question": "Were you discriminated against?", "answers": [{"id": "fc28c4b6-d185-cf56-a7e4-dead499ff1e8", "answer": "Yes, age discrimination occurred", "user_context": "Manager explicitly mentioned my age", "metadata": {"confidence": 0.9, "tags": ["age_discrimination"]}}]}]}
 type DAGPresenter struct {
 	Id    uuid.UUID       `json:"id" example:"550e8400-e29b-41d4-a716-446655440000" description:"Unique identifier for the Legal Case DAG"`
+	Title string          `json:"title" example:"Employment Discrimination Case" description:"Human-readable title describing the legal case context"`
 	Nodes []NodePresenter `json:"nodes" description:"Array of question nodes that make up the legal case decision tree"`
 }
 
@@ -23,6 +24,7 @@ func NewDAGPresenter(dag *dag.DAG) DAGPresenter {
 
 	return DAGPresenter{
 		Id:    dag.Id,
+		Title: dag.Title,
 		Nodes: nodes,
 	}
 }
@@ -123,6 +125,7 @@ func (h *dagHandler) presenterToDAG(presenter DAGPresenter) *dag.DAG {
 
 	return &dag.DAG{
 		Id:    presenter.Id,
+		Title: presenter.Title,
 		Nodes: nodes,
 	}
 }

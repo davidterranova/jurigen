@@ -79,6 +79,10 @@ func (u *UpdateDAGUseCase) validateDAGStructure(d *dag.DAG) error {
 		return fmt.Errorf("DAG ID cannot be empty")
 	}
 
+	if d.Title == "" {
+		return fmt.Errorf("DAG title cannot be empty")
+	}
+
 	// Validate nodes
 	if len(d.Nodes) == 0 {
 		return fmt.Errorf("DAG must contain at least one node")

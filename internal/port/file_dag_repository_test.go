@@ -36,7 +36,7 @@ func TestFileDAGRepository_CreateAndGet(t *testing.T) {
 			name: "successfully create and retrieve DAG",
 			setup: func() (*FileDAGRepository, *dag.DAG) {
 				repo := NewFileDAGRepository(tempDir)
-				testDAG := dag.NewDAG()
+				testDAG := dag.NewDAG("Test DAG")
 				return repo, testDAG
 			},
 			wantErr: false,
@@ -93,7 +93,7 @@ func TestFileDAGRepository_Create_AlreadyExists(t *testing.T) {
 
 	repo := NewFileDAGRepository(tempDir)
 	ctx := context.Background()
-	testDAG := dag.NewDAG()
+	testDAG := dag.NewDAG("Test DAG")
 
 	// Create the DAG first time
 	err = repo.Create(ctx, testDAG)
@@ -151,7 +151,7 @@ func TestFileDAGRepository_Delete(t *testing.T) {
 
 	repo := NewFileDAGRepository(tempDir)
 	ctx := context.Background()
-	testDAG := dag.NewDAG()
+	testDAG := dag.NewDAG("Test DAG")
 
 	// Create a DAG first
 	err = repo.Create(ctx, testDAG)
@@ -205,8 +205,8 @@ func TestFileDAGRepository_List(t *testing.T) {
 	assert.Len(t, ids, 0)
 
 	// Add some DAGs
-	dag1 := dag.NewDAG()
-	dag2 := dag.NewDAG()
+	dag1 := dag.NewDAG("Test DAG")
+	dag2 := dag.NewDAG("Test DAG")
 
 	err = repo.Create(ctx, dag1)
 	require.NoError(t, err)
@@ -231,7 +231,7 @@ func TestFileDAGRepository_List_WithInvalidFiles(t *testing.T) {
 	ctx := context.Background()
 
 	// Create some valid DAG files
-	validDAG := dag.NewDAG()
+	validDAG := dag.NewDAG("Test DAG")
 	err = repo.Create(ctx, validDAG)
 	require.NoError(t, err)
 
@@ -279,7 +279,7 @@ func TestFileDAGRepository_Update(t *testing.T) {
 
 	repo := NewFileDAGRepository(tempDir)
 	ctx := context.Background()
-	testDAG := dag.NewDAG()
+	testDAG := dag.NewDAG("Test DAG")
 
 	// Create a DAG first
 	err = repo.Create(ctx, testDAG)
@@ -344,7 +344,7 @@ func TestFileDAGRepository_Update_FunctionFails(t *testing.T) {
 
 	repo := NewFileDAGRepository(tempDir)
 	ctx := context.Background()
-	testDAG := dag.NewDAG()
+	testDAG := dag.NewDAG("Test DAG")
 
 	// Create a DAG
 	err = repo.Create(ctx, testDAG)
@@ -368,7 +368,7 @@ func TestFileDAGRepository_Update_IDChange(t *testing.T) {
 
 	repo := NewFileDAGRepository(tempDir)
 	ctx := context.Background()
-	testDAG := dag.NewDAG()
+	testDAG := dag.NewDAG("Test DAG")
 
 	// Create a DAG
 	err = repo.Create(ctx, testDAG)
@@ -395,7 +395,7 @@ func TestFileDAGRepository_CreateDirectoryIfNotExists(t *testing.T) {
 	nestedDir := filepath.Join(tempBase, "nested", "directory", "structure")
 	repo := NewFileDAGRepository(nestedDir)
 	ctx := context.Background()
-	testDAG := dag.NewDAG()
+	testDAG := dag.NewDAG("Test DAG")
 
 	// Create should create the directory structure
 	err = repo.Create(ctx, testDAG)
@@ -419,7 +419,7 @@ func TestFileDAGRepository_DAGWithComplexStructure(t *testing.T) {
 	ctx := context.Background()
 
 	// Create a complex DAG with nodes and answers
-	testDAG := dag.NewDAG()
+	testDAG := dag.NewDAG("Test DAG")
 
 	// Root node
 	rootNode := dag.Node{
@@ -508,7 +508,7 @@ func TestFileDAGRepository_RoundTripConsistency(t *testing.T) {
 
 	repo := NewFileDAGRepository(tempDir)
 	ctx := context.Background()
-	originalDAG := dag.NewDAG()
+	originalDAG := dag.NewDAG("Test DAG")
 
 	// Add a complex node structure
 	node := dag.Node{
@@ -597,7 +597,7 @@ func TestFileDAGRepository_ErrorHandling_FilePermissions(t *testing.T) {
 
 	repo := NewFileDAGRepository(tempDir)
 	ctx := context.Background()
-	testDAG := dag.NewDAG()
+	testDAG := dag.NewDAG("Test DAG")
 
 	// Create should fail due to permission issues
 	err = repo.Create(ctx, testDAG)

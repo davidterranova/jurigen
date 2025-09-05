@@ -110,7 +110,7 @@ func TestDAGHandler_List(t *testing.T) {
 }
 
 func TestDAGHandler_GetDAG(t *testing.T) {
-	testDAG := dag.NewDAG()
+	testDAG := dag.NewDAG("Test DAG")
 
 	tests := []struct {
 		name           string

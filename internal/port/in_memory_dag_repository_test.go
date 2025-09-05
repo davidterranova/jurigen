@@ -30,7 +30,7 @@ func TestInMemoryDAGRepository_CreateAndGet(t *testing.T) {
 			name: "successfully create and retrieve DAG",
 			setup: func() (*InMemoryDAGRepository, *dag.DAG) {
 				repo := NewInMemoryDAGRepository()
-				testDAG := dag.NewDAG()
+				testDAG := dag.NewDAG("Test DAG")
 				return repo, testDAG
 			},
 			wantErr: false,
@@ -89,7 +89,7 @@ func TestInMemoryDAGRepository_Get_NotFound(t *testing.T) {
 func TestInMemoryDAGRepository_Delete(t *testing.T) {
 	repo := NewInMemoryDAGRepository()
 	ctx := context.Background()
-	testDAG := dag.NewDAG()
+	testDAG := dag.NewDAG("Test DAG")
 
 	// Create a DAG first
 	err := repo.Create(ctx, testDAG)
@@ -129,8 +129,8 @@ func TestInMemoryDAGRepository_List(t *testing.T) {
 	assert.Len(t, ids, 0)
 
 	// Add some DAGs
-	dag1 := dag.NewDAG()
-	dag2 := dag.NewDAG()
+	dag1 := dag.NewDAG("Test DAG")
+	dag2 := dag.NewDAG("Test DAG")
 
 	err = repo.Create(ctx, dag1)
 	require.NoError(t, err)
@@ -148,7 +148,7 @@ func TestInMemoryDAGRepository_List(t *testing.T) {
 func TestInMemoryDAGRepository_Update(t *testing.T) {
 	repo := NewInMemoryDAGRepository()
 	ctx := context.Background()
-	testDAG := dag.NewDAG()
+	testDAG := dag.NewDAG("Test DAG")
 
 	// Create a DAG first
 	err := repo.Create(ctx, testDAG)
@@ -203,7 +203,7 @@ func TestInMemoryDAGRepository_Update_NotFound(t *testing.T) {
 func TestInMemoryDAGRepository_Update_FunctionFails(t *testing.T) {
 	repo := NewInMemoryDAGRepository()
 	ctx := context.Background()
-	testDAG := dag.NewDAG()
+	testDAG := dag.NewDAG("Test DAG")
 
 	// Create a DAG
 	err := repo.Create(ctx, testDAG)
@@ -222,7 +222,7 @@ func TestInMemoryDAGRepository_Update_FunctionFails(t *testing.T) {
 func TestInMemoryDAGRepository_Update_IDChange(t *testing.T) {
 	repo := NewInMemoryDAGRepository()
 	ctx := context.Background()
-	testDAG := dag.NewDAG()
+	testDAG := dag.NewDAG("Test DAG")
 
 	// Create a DAG
 	err := repo.Create(ctx, testDAG)
@@ -251,7 +251,7 @@ func TestInMemoryDAGRepository_ConcurrentAccess(t *testing.T) {
 	for i := 0; i < numGoroutines; i++ {
 		go func() {
 			for j := 0; j < numDAGsPerGoroutine; j++ {
-				testDAG := dag.NewDAG()
+				testDAG := dag.NewDAG("Test DAG")
 				err := repo.Create(ctx, testDAG)
 				assert.NoError(t, err)
 

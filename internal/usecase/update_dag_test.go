@@ -185,15 +185,27 @@ func TestUpdateDAGUseCase_ValidateDAGStructure(t *testing.T) {
 			name: "validates empty DAG ID",
 			dag: &dag.DAG{
 				Id:    uuid.Nil,
+				Title: "Valid Title",
 				Nodes: map[uuid.UUID]dag.Node{},
 			},
 			wantError: true,
 			errorMsg:  "DAG ID cannot be empty",
 		},
 		{
+			name: "validates empty title",
+			dag: &dag.DAG{
+				Id:    uuid.New(),
+				Title: "",
+				Nodes: map[uuid.UUID]dag.Node{},
+			},
+			wantError: true,
+			errorMsg:  "DAG title cannot be empty",
+		},
+		{
 			name: "validates empty nodes",
 			dag: &dag.DAG{
 				Id:    uuid.New(),
+				Title: "Valid Title",
 				Nodes: map[uuid.UUID]dag.Node{},
 			},
 			wantError: true,
@@ -204,7 +216,8 @@ func TestUpdateDAGUseCase_ValidateDAGStructure(t *testing.T) {
 			dag: func() *dag.DAG {
 				nodeId := uuid.New()
 				return &dag.DAG{
-					Id: uuid.New(),
+					Id:    uuid.New(),
+					Title: "Valid Title",
 					Nodes: map[uuid.UUID]dag.Node{
 						nodeId: {
 							Id:       uuid.New(), // Different ID
@@ -222,7 +235,8 @@ func TestUpdateDAGUseCase_ValidateDAGStructure(t *testing.T) {
 			dag: func() *dag.DAG {
 				nodeId := uuid.New()
 				return &dag.DAG{
-					Id: uuid.New(),
+					Id:    uuid.New(),
+					Title: "Valid Title",
 					Nodes: map[uuid.UUID]dag.Node{
 						nodeId: {
 							Id:       nodeId,
@@ -241,7 +255,8 @@ func TestUpdateDAGUseCase_ValidateDAGStructure(t *testing.T) {
 				nodeId := uuid.New()
 				answerId := uuid.New()
 				return &dag.DAG{
-					Id: uuid.New(),
+					Id:    uuid.New(),
+					Title: "Valid Title",
 					Nodes: map[uuid.UUID]dag.Node{
 						nodeId: {
 							Id:       nodeId,
@@ -266,7 +281,8 @@ func TestUpdateDAGUseCase_ValidateDAGStructure(t *testing.T) {
 				answerId := uuid.New()
 				nonExistentNodeId := uuid.New()
 				return &dag.DAG{
-					Id: uuid.New(),
+					Id:    uuid.New(),
+					Title: "Valid Title",
 					Nodes: map[uuid.UUID]dag.Node{
 						nodeId: {
 							Id:       nodeId,
@@ -342,7 +358,8 @@ func createValidTestDAG() *dag.DAG {
 	answerId2 := uuid.New()
 
 	return &dag.DAG{
-		Id: dagId,
+		Id:    dagId,
+		Title: "Test Legal Case",
 		Nodes: map[uuid.UUID]dag.Node{
 			rootNodeId: {
 				Id:       rootNodeId,

@@ -35,7 +35,7 @@ func (r *FileDAGRepository) Get(ctx context.Context, id uuid.UUID) (*dag.DAG, er
 		)
 	}
 
-	var dag = dag.NewDAG()
+	var dag = dag.NewDAG("Untitled DAG")
 	err = dag.UnmarshalJSON(data)
 	if err != nil {
 		return nil, fmt.Errorf(

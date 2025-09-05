@@ -26,7 +26,7 @@ func TestNewGetDAGUseCase(t *testing.T) {
 }
 
 func TestGetDAGUseCase_Execute(t *testing.T) {
-	testDAG := dag.NewDAG()
+	testDAG := dag.NewDAG("Test DAG")
 	validUUID := testDAG.Id.String()
 
 	tests := []struct {
@@ -110,7 +110,7 @@ func TestGetDAGUseCase_Execute(t *testing.T) {
 			},
 			setupMock: func(mockRepo *mocks.MockDAGRepository) {
 				expectedUUID := uuid.MustParse("550e8400-e29b-41d4-a716-446655440000")
-				retrievedDAG := dag.NewDAG()
+				retrievedDAG := dag.NewDAG("Test DAG")
 				retrievedDAG.Id = expectedUUID
 				mockRepo.EXPECT().Get(gomock.Any(), expectedUUID).Return(retrievedDAG, nil)
 			},
@@ -165,7 +165,7 @@ func TestGetDAGUseCase_Execute_ValidationEdgeCases(t *testing.T) {
 			},
 			setupMock: func(mockRepo *mocks.MockDAGRepository) {
 				expectedUUID := uuid.MustParse("550e8400-e29b-41d4-a716-446655440000")
-				testDAG := dag.NewDAG()
+				testDAG := dag.NewDAG("Test DAG")
 				testDAG.Id = expectedUUID
 				mockRepo.EXPECT().Get(gomock.Any(), expectedUUID).Return(testDAG, nil)
 			},
@@ -220,7 +220,7 @@ func TestGetDAGUseCase_Execute_ContextPropagation(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	testDAG := dag.NewDAG()
+	testDAG := dag.NewDAG("Test DAG")
 	mockRepo := mocks.NewMockDAGRepository(ctrl)
 
 	// Verify that context is properly passed to repository
@@ -241,7 +241,7 @@ func TestGetDAGUseCase_Execute_RepositoryErrorWrapping(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	testDAG := dag.NewDAG()
+	testDAG := dag.NewDAG("Test DAG")
 	mockRepo := mocks.NewMockDAGRepository(ctrl)
 
 	// Test that repository errors are properly propagated
