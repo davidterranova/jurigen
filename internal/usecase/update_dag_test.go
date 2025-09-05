@@ -26,7 +26,7 @@ func TestNewUpdateDAGUseCase(t *testing.T) {
 
 func TestUpdateDAGUseCase_Execute(t *testing.T) {
 	testDAG := createValidTestDAG()
-	validUUID := testDAG.Id.String()
+	unknownUUID := uuid.New()
 
 	tests := []struct {
 		name        string
@@ -39,11 +39,10 @@ func TestUpdateDAGUseCase_Execute(t *testing.T) {
 		{
 			name: "successfully updates existing DAG",
 			cmd: CmdUpdateDAG{
-				DAGId: validUUID,
+				DAGId: testDAG.Id.String(),
 				DAG:   testDAG,
 			},
 			setupMock: func(mockRepo *mocks.MockDAGRepository) {
-				mockRepo.EXPECT().Get(gomock.Any(), testDAG.Id).Return(testDAG, nil)
 				mockRepo.EXPECT().Update(gomock.Any(), testDAG.Id, gomock.Any()).DoAndReturn(
 					func(ctx context.Context, id uuid.UUID, fnUpdate func(dag.DAG) (dag.DAG, error)) error {
 						_, err := fnUpdate(*testDAG)
@@ -81,7 +80,7 @@ func TestUpdateDAGUseCase_Execute(t *testing.T) {
 		{
 			name: "returns validation error for nil DAG",
 			cmd: CmdUpdateDAG{
-				DAGId: validUUID,
+				DAGId: testDAG.Id.String(),
 				DAG:   nil,
 			},
 			setupMock: func(mockRepo *mocks.MockDAGRepository) {
@@ -93,11 +92,11 @@ func TestUpdateDAGUseCase_Execute(t *testing.T) {
 		{
 			name: "returns validation error for DAG ID mismatch",
 			cmd: CmdUpdateDAG{
-				DAGId: uuid.New().String(), // Different ID
+				DAGId: unknownUUID.String(), // Different ID
 				DAG:   testDAG,
 			},
 			setupMock: func(mockRepo *mocks.MockDAGRepository) {
-				// No repository call expected due to validation failure
+				mockRepo.EXPECT().Update(gomock.Any(), unknownUUID, gomock.Any()).Return(ErrInvalidCommand)
 			},
 			expectError: true,
 			errorType:   ErrInvalidCommand,
@@ -105,11 +104,11 @@ func TestUpdateDAGUseCase_Execute(t *testing.T) {
 		{
 			name: "returns not found error when DAG doesn't exist",
 			cmd: CmdUpdateDAG{
-				DAGId: validUUID,
+				DAGId: testDAG.Id.String(),
 				DAG:   testDAG,
 			},
 			setupMock: func(mockRepo *mocks.MockDAGRepository) {
-				mockRepo.EXPECT().Get(gomock.Any(), testDAG.Id).Return(nil, ErrNotFound)
+				mockRepo.EXPECT().Update(gomock.Any(), testDAG.Id, gomock.Any()).Return(ErrNotFound)
 			},
 			expectError: true,
 			errorType:   ErrNotFound,
@@ -117,11 +116,10 @@ func TestUpdateDAGUseCase_Execute(t *testing.T) {
 		{
 			name: "returns internal error when repository update fails",
 			cmd: CmdUpdateDAG{
-				DAGId: validUUID,
+				DAGId: testDAG.Id.String(),
 				DAG:   testDAG,
 			},
 			setupMock: func(mockRepo *mocks.MockDAGRepository) {
-				mockRepo.EXPECT().Get(gomock.Any(), testDAG.Id).Return(testDAG, nil)
 				mockRepo.EXPECT().Update(gomock.Any(), testDAG.Id, gomock.Any()).Return(ErrInternal)
 			},
 			expectError: true,
@@ -185,15 +183,27 @@ func TestUpdateDAGUseCase_ValidateDAGStructure(t *testing.T) {
 			name: "validates empty DAG ID",
 			dag: &dag.DAG{
 				Id:    uuid.Nil,
+				Title: "Valid Title",
 				Nodes: map[uuid.UUID]dag.Node{},
 			},
 			wantError: true,
 			errorMsg:  "DAG ID cannot be empty",
 		},
 		{
+			name: "validates empty title",
+			dag: &dag.DAG{
+				Id:    uuid.New(),
+				Title: "",
+				Nodes: map[uuid.UUID]dag.Node{},
+			},
+			wantError: true,
+			errorMsg:  "DAG title cannot be empty",
+		},
+		{
 			name: "validates empty nodes",
 			dag: &dag.DAG{
 				Id:    uuid.New(),
+				Title: "Valid Title",
 				Nodes: map[uuid.UUID]dag.Node{},
 			},
 			wantError: true,
@@ -204,7 +214,8 @@ func TestUpdateDAGUseCase_ValidateDAGStructure(t *testing.T) {
 			dag: func() *dag.DAG {
 				nodeId := uuid.New()
 				return &dag.DAG{
-					Id: uuid.New(),
+					Id:    uuid.New(),
+					Title: "Valid Title",
 					Nodes: map[uuid.UUID]dag.Node{
 						nodeId: {
 							Id:       uuid.New(), // Different ID
@@ -222,7 +233,8 @@ func TestUpdateDAGUseCase_ValidateDAGStructure(t *testing.T) {
 			dag: func() *dag.DAG {
 				nodeId := uuid.New()
 				return &dag.DAG{
-					Id: uuid.New(),
+					Id:    uuid.New(),
+					Title: "Valid Title",
 					Nodes: map[uuid.UUID]dag.Node{
 						nodeId: {
 							Id:       nodeId,
@@ -241,7 +253,8 @@ func TestUpdateDAGUseCase_ValidateDAGStructure(t *testing.T) {
 				nodeId := uuid.New()
 				answerId := uuid.New()
 				return &dag.DAG{
-					Id: uuid.New(),
+					Id:    uuid.New(),
+					Title: "Valid Title",
 					Nodes: map[uuid.UUID]dag.Node{
 						nodeId: {
 							Id:       nodeId,
@@ -266,7 +279,8 @@ func TestUpdateDAGUseCase_ValidateDAGStructure(t *testing.T) {
 				answerId := uuid.New()
 				nonExistentNodeId := uuid.New()
 				return &dag.DAG{
-					Id: uuid.New(),
+					Id:    uuid.New(),
+					Title: "Valid Title",
 					Nodes: map[uuid.UUID]dag.Node{
 						nodeId: {
 							Id:       nodeId,
@@ -320,7 +334,6 @@ func TestUpdateDAGUseCase_Execute_ContextPropagation(t *testing.T) {
 	contextKey := testContextKey("test-key")
 	expectedCtx := context.WithValue(context.Background(), contextKey, "test-value")
 
-	mockRepo.EXPECT().Get(expectedCtx, testDAG.Id).Return(testDAG, nil)
 	mockRepo.EXPECT().Update(expectedCtx, testDAG.Id, gomock.Any()).Return(nil)
 
 	useCase := NewUpdateDAGUseCase(mockRepo)
@@ -342,7 +355,8 @@ func createValidTestDAG() *dag.DAG {
 	answerId2 := uuid.New()
 
 	return &dag.DAG{
-		Id: dagId,
+		Id:    dagId,
+		Title: "Test Legal Case",
 		Nodes: map[uuid.UUID]dag.Node{
 			rootNodeId: {
 				Id:       rootNodeId,

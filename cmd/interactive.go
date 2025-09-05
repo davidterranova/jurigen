@@ -35,7 +35,7 @@ var interactiveCmd = &cobra.Command{
 			log.Fatalf("error reading file '%s': %v", interactiveDagFile, err)
 		}
 
-		var d = dag.NewDAG()
+		var d = dag.NewDAG("Interactive DAG")
 		err = d.UnmarshalJSON(data)
 		if err != nil {
 			log.Fatalf("error unmarshalling file '%s': %v", interactiveDagFile, err)

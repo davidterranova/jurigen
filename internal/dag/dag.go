@@ -10,6 +10,7 @@ import (
 
 type DAG struct {
 	Id    uuid.UUID `json:"id"`
+	Title string    `json:"title"`
 	Nodes map[uuid.UUID]Node
 }
 
@@ -28,9 +29,10 @@ type Answer struct {
 	Metadata    map[string]interface{} `json:"metadata,omitempty"`
 }
 
-func NewDAG() *DAG {
+func NewDAG(title string) *DAG {
 	return &DAG{
 		Id:    uuid.New(),
+		Title: title,
 		Nodes: make(map[uuid.UUID]Node),
 	}
 }
@@ -79,6 +81,7 @@ func (d DAG) GetRootNode() (Node, error) {
 // dagJSON represents the JSON structure for marshaling/unmarshaling a DAG
 type dagJSON struct {
 	Id    uuid.UUID `json:"id"`
+	Title string    `json:"title"`
 	Nodes []Node    `json:"nodes"`
 }
 
@@ -88,9 +91,10 @@ func (d DAG) MarshalJSON() ([]byte, error) {
 		nodes = append(nodes, node)
 	}
 
-	// Create a dagJSON struct to marshal both id and nodes
+	// Create a dagJSON struct to marshal both id, title and nodes
 	dag := dagJSON{
 		Id:    d.Id,
+		Title: d.Title,
 		Nodes: nodes,
 	}
 
@@ -105,8 +109,9 @@ func (d *DAG) UnmarshalJSON(data []byte) error {
 		return fmt.Errorf("error unmarshalling DAG data: %w", err)
 	}
 
-	// Set the DAG id from the unmarshaled data
+	// Set the DAG id and title from the unmarshaled data
 	d.Id = dag.Id
+	d.Title = dag.Title
 
 	// Initialize the Nodes map if it's nil
 	if d.Nodes == nil {

@@ -32,7 +32,7 @@ var dagCmd = &cobra.Command{
 			log.Fatalf("error reading file '%s': %v", dagFile, err)
 		}
 
-		var dag = dag.NewDAG()
+		var dag = dag.NewDAG("Sample DAG")
 		err = dag.UnmarshalJSON(data)
 		if err != nil {
 			log.Fatalf("error unmarshalling file '%s': %v", dagFile, err)

@@ -14,9 +14,11 @@ func TestNewDAG(t *testing.T) {
 	t.Run("creates empty DAG with initialized fields", func(t *testing.T) {
 		t.Parallel()
 
-		d := NewDAG()
+		title := "Test DAG"
+		d := NewDAG(title)
 
 		assert.NotEqual(t, uuid.Nil, d.Id)
+		assert.Equal(t, title, d.Title)
 		assert.NotNil(t, d.Nodes)
 		assert.Equal(t, 0, len(d.Nodes))
 	})
@@ -25,7 +27,7 @@ func TestNewDAG(t *testing.T) {
 func TestDAG_GetNode(t *testing.T) {
 	t.Parallel()
 
-	d := NewDAG()
+	d := NewDAG("Test DAG")
 	testId1 := uuid.New()
 	testId2 := uuid.New()
 
@@ -98,7 +100,7 @@ func TestDAG_GetRootNode(t *testing.T) {
 		{
 			name: "finds single root node",
 			setup: func() *DAG {
-				d := NewDAG()
+				d := NewDAG("Test DAG")
 				rootId := uuid.New()
 				childId := uuid.New()
 
@@ -128,7 +130,7 @@ func TestDAG_GetRootNode(t *testing.T) {
 		{
 			name: "returns error for empty DAG",
 			setup: func() *DAG {
-				return NewDAG()
+				return NewDAG("Test DAG")
 			},
 			wantErr: true,
 			errMsg:  "no root node found",
@@ -136,7 +138,7 @@ func TestDAG_GetRootNode(t *testing.T) {
 		{
 			name: "returns error when no root node found",
 			setup: func() *DAG {
-				d := NewDAG()
+				d := NewDAG("Test DAG")
 				node1Id := uuid.New()
 				node2Id := uuid.New()
 
@@ -175,7 +177,7 @@ func TestDAG_GetRootNode(t *testing.T) {
 		{
 			name: "returns error when multiple root nodes found",
 			setup: func() *DAG {
-				d := NewDAG()
+				d := NewDAG("Test DAG")
 				root1Id := uuid.New()
 				root2Id := uuid.New()
 
@@ -230,7 +232,7 @@ func TestDAG_MarshalJSON(t *testing.T) {
 		{
 			name: "marshals empty DAG",
 			setup: func() *DAG {
-				return NewDAG()
+				return NewDAG("Test DAG")
 			},
 			verify: func(t *testing.T, data []byte) {
 				assert.Contains(t, string(data), `"nodes":[]`)
@@ -240,7 +242,7 @@ func TestDAG_MarshalJSON(t *testing.T) {
 		{
 			name: "marshals DAG with single node",
 			setup: func() *DAG {
-				d := NewDAG()
+				d := NewDAG("Test DAG")
 				nodeId := uuid.New()
 				answerId := uuid.New()
 
@@ -269,7 +271,7 @@ func TestDAG_MarshalJSON(t *testing.T) {
 		{
 			name: "marshals DAG with multiple nodes",
 			setup: func() *DAG {
-				d := NewDAG()
+				d := NewDAG("Test DAG")
 				node1Id := uuid.New()
 				node2Id := uuid.New()
 
@@ -395,7 +397,7 @@ func TestDAG_UnmarshalJSON(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			d := NewDAG()
+			d := NewDAG("Test DAG")
 			err := d.UnmarshalJSON([]byte(tt.data))
 
 			if tt.wantErr {
@@ -423,7 +425,7 @@ func TestDAG_String(t *testing.T) {
 		{
 			name: "formats empty DAG",
 			setup: func() *DAG {
-				return NewDAG()
+				return NewDAG("Test DAG")
 			},
 			verify: func(t *testing.T, result string) {
 				assert.Equal(t, "", result)
@@ -432,7 +434,7 @@ func TestDAG_String(t *testing.T) {
 		{
 			name: "formats DAG with nodes and answers",
 			setup: func() *DAG {
-				d := NewDAG()
+				d := NewDAG("Test DAG")
 				nodeId := uuid.New()
 
 				node := Node{
@@ -492,7 +494,7 @@ func TestDAG_Walk(t *testing.T) {
 		{
 			name: "walks through simple path",
 			setup: func() (*DAG, uuid.UUID) {
-				d := NewDAG()
+				d := NewDAG("Test DAG")
 				rootId := uuid.New()
 				childId := uuid.New()
 				answerId1 := uuid.New()
@@ -545,7 +547,7 @@ func TestDAG_Walk(t *testing.T) {
 		{
 			name: "stops at leaf node",
 			setup: func() (*DAG, uuid.UUID) {
-				d := NewDAG()
+				d := NewDAG("Test DAG")
 				rootId := uuid.New()
 
 				root := Node{
@@ -565,7 +567,7 @@ func TestDAG_Walk(t *testing.T) {
 		{
 			name: "returns error for invalid node",
 			setup: func() (*DAG, uuid.UUID) {
-				return NewDAG(), uuid.New()
+				return NewDAG("Test DAG"), uuid.New()
 			},
 			fnAnswer: func(node Node) (Answer, error) {
 				return Answer{}, nil
@@ -576,7 +578,7 @@ func TestDAG_Walk(t *testing.T) {
 		{
 			name: "returns error when fnAnswer fails",
 			setup: func() (*DAG, uuid.UUID) {
-				d := NewDAG()
+				d := NewDAG("Test DAG")
 				rootId := uuid.New()
 
 				root := Node{
@@ -603,7 +605,7 @@ func TestDAG_Walk(t *testing.T) {
 		{
 			name: "returns error for invalid answer",
 			setup: func() (*DAG, uuid.UUID) {
-				d := NewDAG()
+				d := NewDAG("Test DAG")
 				rootId := uuid.New()
 
 				root := Node{
@@ -654,7 +656,7 @@ func TestDAG_WalkParentNodePointers(t *testing.T) {
 	t.Parallel()
 
 	// Create a DAG
-	d := NewDAG()
+	d := NewDAG("Test DAG")
 	node1Id := uuid.New()
 	node2Id := uuid.New()
 	answer1Id := uuid.New()
@@ -689,7 +691,7 @@ func TestDAG_WalkParentNodePointers(t *testing.T) {
 	jsonData, err := d.MarshalJSON()
 	require.NoError(t, err)
 
-	testDAG := NewDAG()
+	testDAG := NewDAG("Test DAG")
 	err = testDAG.UnmarshalJSON(jsonData)
 	require.NoError(t, err)
 
@@ -725,7 +727,7 @@ func TestDAG_JSONRoundTrip(t *testing.T) {
 		t.Parallel()
 
 		// Setup original DAG
-		original := NewDAG()
+		original := NewDAG("Test DAG")
 		nodeId := uuid.New()
 		answerId := uuid.New()
 
@@ -748,7 +750,7 @@ func TestDAG_JSONRoundTrip(t *testing.T) {
 		require.NoError(t, err)
 
 		// Unmarshal
-		roundtrip := NewDAG()
+		roundtrip := NewDAG("Test DAG")
 		err = roundtrip.UnmarshalJSON(data)
 		require.NoError(t, err)
 
@@ -777,7 +779,7 @@ func TestDAG_ContextMarshalling(t *testing.T) {
 		t.Parallel()
 
 		// Create DAG with context-rich answers
-		d := NewDAG()
+		d := NewDAG("Test DAG")
 		nodeId := uuid.New()
 		answerId := uuid.New()
 
@@ -849,7 +851,7 @@ func TestDAG_ContextMarshalling(t *testing.T) {
 			]
 		}`
 
-		d := NewDAG()
+		d := NewDAG("Test DAG")
 		err := d.UnmarshalJSON([]byte(jsonData))
 		require.NoError(t, err)
 
@@ -886,7 +888,7 @@ func TestDAG_ContextMarshalling(t *testing.T) {
 		t.Parallel()
 
 		// Create DAG with answers that have no context
-		d := NewDAG()
+		d := NewDAG("Test DAG")
 		nodeId := uuid.New()
 
 		answer := Answer{
@@ -923,7 +925,7 @@ func TestDAG_ContextMarshalling(t *testing.T) {
 		t.Parallel()
 
 		// Create DAG with mixed answer types
-		d := NewDAG()
+		d := NewDAG("Test DAG")
 		nodeId := uuid.New()
 		answer1Id := uuid.New()
 		answer2Id := uuid.New()
@@ -959,7 +961,7 @@ func TestDAG_ContextMarshalling(t *testing.T) {
 		jsonData, err := d.MarshalJSON()
 		require.NoError(t, err)
 
-		newDAG := NewDAG()
+		newDAG := NewDAG("Test DAG")
 		err = newDAG.UnmarshalJSON(jsonData)
 		require.NoError(t, err)
 
