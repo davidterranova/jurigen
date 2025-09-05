@@ -39,27 +39,22 @@ func (u *UpdateDAGUseCase) Execute(ctx context.Context, cmd CmdUpdateDAG) (*dag.
 		return nil, fmt.Errorf("%w: invalid UUID format: %s", ErrInvalidCommand, err)
 	}
 
-	// Validate that the DAG ID in the command matches the DAG ID in the payload
-	if cmd.DAG.Id != id {
-		return nil, fmt.Errorf("%w: DAG ID mismatch - URL ID: %s, payload ID: %s", ErrInvalidCommand, id, cmd.DAG.Id)
-	}
-
-	// Validate DAG structure
-	if err := u.validateDAGStructure(cmd.DAG); err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrInvalidCommand, err)
-	}
-
-	// Check if DAG exists
-	_, err = u.dagRepository.Get(ctx, id)
-	if err != nil {
-		return nil, err // This will preserve the ErrNotFound if it doesn't exist
-	}
-
 	// Update the DAG using repository's Update method
 	var updatedDAG *dag.DAG
 	err = u.dagRepository.Update(ctx, id, func(existingDAG dag.DAG) (dag.DAG, error) {
+		// Validate that the DAG ID in the command matches the DAG ID in the payload
+		if cmd.DAG.Id != id {
+			return existingDAG, fmt.Errorf("%w: DAG ID mismatch - URL ID: %s, payload ID: %s", ErrInvalidCommand, id, cmd.DAG.Id)
+		}
+
+		// Validate DAG structure
+		if err := u.validateDAGStructure(cmd.DAG); err != nil {
+			return existingDAG, fmt.Errorf("%w: %s", ErrInvalidCommand, err)
+		}
+
 		// Replace the entire DAG with the new one
 		updatedDAG = cmd.DAG
+
 		return *cmd.DAG, nil
 	})
 	if err != nil {
