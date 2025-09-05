@@ -1,3 +1,6 @@
 PR_DESCRIPTION.mdbin/
 .vscode/
 bin/
+tree.json
+data/
+default.json
