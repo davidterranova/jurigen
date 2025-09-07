@@ -44,6 +44,10 @@ var dagCmd = &cobra.Command{
 
 func init() {
 	dagCmd.Flags().StringVarP(&dagFile, "dag", "d", "", "Path to the DAG JSON file (required)")
-	dagCmd.MarkFlagRequired("dag")
+	err := dagCmd.MarkFlagRequired("dag")
+	if err != nil {
+		log.Fatalf("error marking flag as required: %v", err)
+	}
+
 	rootCmd.AddCommand(dagCmd)
 }

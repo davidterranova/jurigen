@@ -25,7 +25,10 @@ func TestFileDAGRepository_CreateAndGet(t *testing.T) {
 	// Create temporary directory for testing
 	tempDir, err := os.MkdirTemp("", "dag-repo-test-*")
 	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	defer func() {
+		err := os.RemoveAll(tempDir)
+		require.NoError(t, err)
+	}()
 
 	tests := []struct {
 		name    string
@@ -89,7 +92,10 @@ func TestFileDAGRepository_Create_AlreadyExists(t *testing.T) {
 	// Create temporary directory for testing
 	tempDir, err := os.MkdirTemp("", "dag-repo-test-*")
 	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	defer func() {
+		err := os.RemoveAll(tempDir)
+		require.NoError(t, err)
+	}()
 
 	repo := NewFileDAGRepository(tempDir)
 	ctx := context.Background()
@@ -110,7 +116,10 @@ func TestFileDAGRepository_Get_NotFound(t *testing.T) {
 	// Create temporary directory for testing
 	tempDir, err := os.MkdirTemp("", "dag-repo-test-*")
 	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	defer func() {
+		err := os.RemoveAll(tempDir)
+		require.NoError(t, err)
+	}()
 
 	repo := NewFileDAGRepository(tempDir)
 	ctx := context.Background()
@@ -126,7 +135,10 @@ func TestFileDAGRepository_Get_InvalidJSON(t *testing.T) {
 	// Create temporary directory for testing
 	tempDir, err := os.MkdirTemp("", "dag-repo-test-*")
 	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	defer func() {
+		err := os.RemoveAll(tempDir)
+		require.NoError(t, err)
+	}()
 
 	repo := NewFileDAGRepository(tempDir)
 	ctx := context.Background()
@@ -147,7 +159,10 @@ func TestFileDAGRepository_Delete(t *testing.T) {
 	// Create temporary directory for testing
 	tempDir, err := os.MkdirTemp("", "dag-repo-test-*")
 	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	defer func() {
+		err := os.RemoveAll(tempDir)
+		require.NoError(t, err)
+	}()
 
 	repo := NewFileDAGRepository(tempDir)
 	ctx := context.Background()
@@ -179,7 +194,10 @@ func TestFileDAGRepository_Delete_NotFound(t *testing.T) {
 	// Create temporary directory for testing
 	tempDir, err := os.MkdirTemp("", "dag-repo-test-*")
 	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	defer func() {
+		err := os.RemoveAll(tempDir)
+		require.NoError(t, err)
+	}()
 
 	repo := NewFileDAGRepository(tempDir)
 	ctx := context.Background()
@@ -194,7 +212,10 @@ func TestFileDAGRepository_List(t *testing.T) {
 	// Create temporary directory for testing
 	tempDir, err := os.MkdirTemp("", "dag-repo-test-*")
 	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	defer func() {
+		err := os.RemoveAll(tempDir)
+		require.NoError(t, err)
+	}()
 
 	repo := NewFileDAGRepository(tempDir)
 	ctx := context.Background()
@@ -225,7 +246,10 @@ func TestFileDAGRepository_List_WithInvalidFiles(t *testing.T) {
 	// Create temporary directory for testing
 	tempDir, err := os.MkdirTemp("", "dag-repo-test-*")
 	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	defer func() {
+		err := os.RemoveAll(tempDir)
+		require.NoError(t, err)
+	}()
 
 	repo := NewFileDAGRepository(tempDir)
 	ctx := context.Background()
@@ -275,7 +299,10 @@ func TestFileDAGRepository_Update(t *testing.T) {
 	// Create temporary directory for testing
 	tempDir, err := os.MkdirTemp("", "dag-repo-test-*")
 	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	defer func() {
+		err := os.RemoveAll(tempDir)
+		require.NoError(t, err)
+	}()
 
 	repo := NewFileDAGRepository(tempDir)
 	ctx := context.Background()
@@ -321,7 +348,10 @@ func TestFileDAGRepository_Update_NotFound(t *testing.T) {
 	// Create temporary directory for testing
 	tempDir, err := os.MkdirTemp("", "dag-repo-test-*")
 	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	defer func() {
+		err := os.RemoveAll(tempDir)
+		require.NoError(t, err)
+	}()
 
 	repo := NewFileDAGRepository(tempDir)
 	ctx := context.Background()
@@ -340,7 +370,10 @@ func TestFileDAGRepository_Update_FunctionFails(t *testing.T) {
 	// Create temporary directory for testing
 	tempDir, err := os.MkdirTemp("", "dag-repo-test-*")
 	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	defer func() {
+		err := os.RemoveAll(tempDir)
+		require.NoError(t, err)
+	}()
 
 	repo := NewFileDAGRepository(tempDir)
 	ctx := context.Background()
@@ -364,7 +397,10 @@ func TestFileDAGRepository_Update_IDChange(t *testing.T) {
 	// Create temporary directory for testing
 	tempDir, err := os.MkdirTemp("", "dag-repo-test-*")
 	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	defer func() {
+		err := os.RemoveAll(tempDir)
+		require.NoError(t, err)
+	}()
 
 	repo := NewFileDAGRepository(tempDir)
 	ctx := context.Background()
@@ -390,7 +426,10 @@ func TestFileDAGRepository_CreateDirectoryIfNotExists(t *testing.T) {
 	// Use a nested directory path that doesn't exist
 	tempBase, err := os.MkdirTemp("", "dag-repo-test-*")
 	require.NoError(t, err)
-	defer os.RemoveAll(tempBase)
+	defer func() {
+		err := os.RemoveAll(tempBase)
+		require.NoError(t, err)
+	}()
 
 	nestedDir := filepath.Join(tempBase, "nested", "directory", "structure")
 	repo := NewFileDAGRepository(nestedDir)
@@ -413,7 +452,10 @@ func TestFileDAGRepository_DAGWithComplexStructure(t *testing.T) {
 	// Create temporary directory for testing
 	tempDir, err := os.MkdirTemp("", "dag-repo-test-*")
 	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	defer func() {
+		err := os.RemoveAll(tempDir)
+		require.NoError(t, err)
+	}()
 
 	repo := NewFileDAGRepository(tempDir)
 	ctx := context.Background()
@@ -504,7 +546,10 @@ func TestFileDAGRepository_RoundTripConsistency(t *testing.T) {
 	// Create temporary directory for testing
 	tempDir, err := os.MkdirTemp("", "dag-repo-test-*")
 	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	defer func() {
+		err := os.RemoveAll(tempDir)
+		require.NoError(t, err)
+	}()
 
 	repo := NewFileDAGRepository(tempDir)
 	ctx := context.Background()
@@ -588,12 +633,18 @@ func TestFileDAGRepository_ErrorHandling_FilePermissions(t *testing.T) {
 	// Create temporary directory for testing
 	tempDir, err := os.MkdirTemp("", "dag-repo-test-*")
 	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	defer func() {
+		err := os.RemoveAll(tempDir)
+		require.NoError(t, err)
+	}()
 
 	// Make the directory read-only
 	err = os.Chmod(tempDir, 0444)
 	require.NoError(t, err)
-	defer os.Chmod(tempDir, 0755) // Restore permissions for cleanup
+	defer func() {
+		err := os.Chmod(tempDir, 0755) // Restore permissions for cleanup
+		require.NoError(t, err)
+	}()
 
 	repo := NewFileDAGRepository(tempDir)
 	ctx := context.Background()
@@ -609,7 +660,10 @@ func TestFileDAGRepository_InterfaceCompliance(t *testing.T) {
 	// Compile-time check that FileDAGRepository implements DAGRepository
 	tempDir, err := os.MkdirTemp("", "dag-repo-test-*")
 	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	defer func() {
+		err := os.RemoveAll(tempDir)
+		require.NoError(t, err)
+	}()
 
 	var _ usecase.DAGRepository = NewFileDAGRepository(tempDir)
 }
