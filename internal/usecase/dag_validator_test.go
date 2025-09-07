@@ -33,9 +33,9 @@ func TestDAGValidator_ValidateDAG(t *testing.T) {
 			expectedErrorCodes: []string{"DAG_NULL"},
 		},
 		{
-			name: "valid single root DAG",
-			dag:  createValidSingleRootDAG(),
-			expectValid: true,
+			name:               "valid single root DAG",
+			dag:                createValidSingleRootDAG(),
+			expectValid:        true,
 			expectedErrorCodes: []string{},
 			expectedStats: ValidationStatistics{
 				TotalNodes:   3,
@@ -256,7 +256,7 @@ func createValidSingleRootDAG() *dag.DAG {
 	rootID := uuid.New()
 	middleID := uuid.New()
 	leafID := uuid.New()
-	
+
 	answer1ID := uuid.New()
 	answer2ID := uuid.New()
 	answer3ID := uuid.New()
