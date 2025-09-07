@@ -72,6 +72,11 @@ lint: ## Run golangci-lint on the codebase
 	@export PATH=$$PATH:$(shell go env GOPATH)/bin && golangci-lint run --no-config --enable=errcheck,govet,ineffassign,staticcheck,unused,goconst,gocritic,gocyclo,misspell,nakedret,nestif,prealloc,unconvert,unparam,whitespace ./internal/dag ./internal/usecase ./internal/port ./internal/adapter/http ./pkg/... ./cmd
 	@echo "✅ Linting completed"
 
+lint-fix: ## Run golangci-lint on the codebase with fix enabled
+	@echo "🔍 Running golangci-lint with fix enabled..."
+	@export PATH=$$PATH:$(shell go env GOPATH)/bin && golangci-lint run --no-config --enable=errcheck,govet,ineffassign,staticcheck,unused,goconst,gocritic,gocyclo,misspell,nakedret,nestif,prealloc,unconvert,unparam,whitespace ./internal/dag ./internal/usecase ./internal/port ./internal/adapter/http ./pkg/... ./cmd --fix
+	@echo "✅ Linting completed with fix enabled"
+
 # Generate OpenAPI/Swagger documentation
 swagger: swagger-install ## Generate OpenAPI documentation from code annotations
 	@echo "🔄 Generating OpenAPI/Swagger documentation..."
