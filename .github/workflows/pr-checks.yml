@@ -1,0 +1,348 @@
+# GitHub Actions Workflow for Pull Request Quality Checks
+name: Pull Request Checks
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+    types: [ opened, synchronize, reopened, ready_for_review ]
+  push:
+    branches: [ main, develop ]
+
+# Cancel previous runs if a new push is made
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Lint and format checks
+  lint:
+    name: Code Quality & Linting
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: true
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Verify dependencies
+        run: go mod verify
+
+      - name: Install golangci-lint
+        run: make lint-install
+
+      - name: Run golangci-lint
+        run: make lint
+
+      - name: Check Go formatting
+        run: |
+          if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then
+            echo "❌ Go code is not formatted. Please run 'go fmt ./...'"
+            gofmt -s -l .
+            exit 1
+          fi
+          echo "✅ Go code is properly formatted"
+
+      - name: Check for suspicious constructs
+        run: go vet ./...
+
+  # Unit tests with coverage
+  test:
+    name: Unit Tests & Coverage
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: true
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Generate mocks and code
+        run: make generate
+
+      - name: Run unit tests
+        run: go test -v -race -coverprofile=coverage.out ./...
+
+      - name: Calculate coverage
+        run: |
+          COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print substr($3, 1, length($3)-1)}')
+          echo "COVERAGE=$COVERAGE" >> $GITHUB_ENV
+          echo "🧪 Test coverage: $COVERAGE%"
+
+      - name: Check coverage threshold
+        run: |
+          THRESHOLD=70
+          if (( $(echo "$COVERAGE > $THRESHOLD" | bc -l) )); then
+            echo "✅ Test coverage $COVERAGE% meets threshold ($THRESHOLD%)"
+          else
+            echo "⚠️ Test coverage $COVERAGE% is below threshold ($THRESHOLD%)"
+            echo "Please add more tests to improve coverage"
+            # Don't fail the build for coverage, just warn
+          fi
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.out
+          flags: unittests
+          name: codecov-umbrella
+
+  # Build verification
+  build:
+    name: Build Verification
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: true
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Build application
+        run: make build
+
+      - name: Verify binary
+        run: |
+          if [ -f "bin/jurigen" ]; then
+            echo "✅ Binary built successfully"
+            ./bin/jurigen --version || ./bin/jurigen --help | head -5
+          else
+            echo "❌ Binary not found"
+            exit 1
+          fi
+
+  # Documentation checks
+  docs:
+    name: Documentation & Swagger
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: true
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Install Swagger tools
+        run: make swagger-install
+
+      - name: Generate Swagger documentation
+        run: make swagger
+
+      - name: Verify Swagger generation
+        run: |
+          if [ -f "docs/swagger/swagger.json" ] && [ -f "docs/swagger/swagger.yaml" ]; then
+            echo "✅ Swagger documentation generated successfully"
+            echo "📊 Swagger JSON size: $(stat -f%z docs/swagger/swagger.json 2>/dev/null || stat -c%s docs/swagger/swagger.json) bytes"
+            echo "📊 Swagger YAML size: $(stat -f%z docs/swagger/swagger.yaml 2>/dev/null || stat -c%s docs/swagger/swagger.yaml) bytes"
+            
+            # Check for validation endpoint
+            if grep -q "/dags/validate" docs/swagger/swagger.json; then
+              echo "✅ Validation endpoint found in Swagger documentation"
+            else
+              echo "⚠️ Validation endpoint not found in Swagger documentation"
+            fi
+          else
+            echo "❌ Swagger documentation generation failed"
+            exit 1
+          fi
+
+  # Security scanning
+  security:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Run Gosec Security Scanner
+        uses: securecodewarrior/github-action-gosec@master
+        with:
+          args: '-no-fail -fmt sarif -out gosec.sarif ./...'
+
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: gosec.sarif
+
+  # Dependency check
+  deps:
+    name: Dependency Analysis
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Check for known vulnerabilities
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck ./...
+
+      - name: Check dependencies
+        run: |
+          echo "📦 Checking Go module dependencies..."
+          go list -m all
+          go mod why -m all | head -20
+
+  # Overall status check
+  pr-checks-status:
+    name: Pull Request Status
+    runs-on: ubuntu-latest
+    needs: [lint, test, build, docs, security, deps]
+    if: always() && github.event.pull_request.draft == false
+    
+    steps:
+      - name: Check all jobs status
+        run: |
+          echo "🔍 Checking status of all PR checks..."
+          
+          # Check if any required job failed
+          if [[ "${{ needs.lint.result }}" == "failure" ]]; then
+            echo "❌ Linting failed"
+            exit 1
+          fi
+          
+          if [[ "${{ needs.test.result }}" == "failure" ]]; then
+            echo "❌ Tests failed"
+            exit 1
+          fi
+          
+          if [[ "${{ needs.build.result }}" == "failure" ]]; then
+            echo "❌ Build failed"
+            exit 1
+          fi
+          
+          if [[ "${{ needs.docs.result }}" == "failure" ]]; then
+            echo "❌ Documentation generation failed"
+            exit 1
+          fi
+          
+          # Security and deps are allowed to have warnings
+          echo "✅ All required PR checks passed!"
+          echo "🎉 Pull request is ready for review"
+
+      - name: PR Status Comment
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && comment.body.includes('🤖 PR Checks Status')
+            );
+            
+            const statusEmoji = '${{ needs.lint.result }}' === 'success' && 
+                               '${{ needs.test.result }}' === 'success' && 
+                               '${{ needs.build.result }}' === 'success' ? '✅' : '❌';
+            
+            const body = `🤖 **PR Checks Status** ${statusEmoji}
+            
+            | Check | Status | 
+            |-------|--------|
+            | 🔍 Linting | ${{ needs.lint.result }} |
+            | 🧪 Tests | ${{ needs.test.result }} |
+            | 🏗️ Build | ${{ needs.build.result }} |
+            | 📚 Docs | ${{ needs.docs.result }} |
+            | 🔒 Security | ${{ needs.security.result }} |
+            | 📦 Dependencies | ${{ needs.deps.result }} |
+            
+            ${statusEmoji === '✅' ? '🎉 All checks passed! This PR is ready for review.' : '⚠️ Some checks failed. Please review and fix the issues above.'}
+            `;
+            
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body
+              });
+            }
