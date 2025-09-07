@@ -1,4 +1,5 @@
-PR_DESCRIPTION.mdbin/
+PR_DESCRIPTION.md
+bin/
 .vscode/
 bin/
 tree.json
