@@ -5,4 +5,4 @@ bin/
 tree.json
 data/
 default.json
-coverage.out
+coverage.out.golangci.yml
