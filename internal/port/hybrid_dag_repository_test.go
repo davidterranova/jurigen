@@ -302,7 +302,7 @@ func TestHybridDAGRepository_GetStats(t *testing.T) {
 
 // Helper functions for tests
 
-func createTestDAG(t *testing.T) *dag.DAG {
+func createTestDAG(_ *testing.T) *dag.DAG {
 	dagID := uuid.New()
 	nodeID := uuid.New()
 	answerID := uuid.New()

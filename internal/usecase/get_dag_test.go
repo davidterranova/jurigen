@@ -224,6 +224,7 @@ func TestGetDAGUseCase_Execute_ContextPropagation(t *testing.T) {
 	mockRepo := mocks.NewMockDAGRepository(ctrl)
 
 	// Verify that context is properly passed to repository
+	//nolint:staticcheck // This is a valid use of context.WithValue (for test purpose only)
 	expectedCtx := context.WithValue(context.Background(), "test-key", "test-value")
 	mockRepo.EXPECT().Get(expectedCtx, testDAG.Id).Return(testDAG, nil)
 

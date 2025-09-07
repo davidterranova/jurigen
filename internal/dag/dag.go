@@ -282,11 +282,17 @@ func CLIFnAnswerWithContext(node Node) (Answer, error) {
 
 	// Clear the input buffer
 	var dummy string
-	fmt.Scanln(&dummy) // consume the newline from previous input
+	_, err = fmt.Scanln(&dummy) // consume the newline from previous input
+	if err != nil {
+		return Answer{}, fmt.Errorf("invalid input: %w", err)
+	}
 
 	// Read user context (can be empty)
 	var userContext string
-	fmt.Scanln(&userContext)
+	_, err = fmt.Scanln(&userContext)
+	if err != nil {
+		return Answer{}, fmt.Errorf("invalid input: %w", err)
+	}
 	if userContext != "" {
 		enhancedAnswer.UserContext = userContext
 	}
@@ -294,7 +300,11 @@ func CLIFnAnswerWithContext(node Node) (Answer, error) {
 	// Collect confidence level
 	fmt.Print("Confidence level 1-10 (press Enter to skip): ")
 	var confidenceStr string
-	fmt.Scanln(&confidenceStr)
+	_, err = fmt.Scanln(&confidenceStr)
+	if err != nil {
+		return Answer{}, fmt.Errorf("invalid input: %w", err)
+	}
+
 	if confidenceStr != "" {
 		var confidence int
 		_, err := fmt.Sscanf(confidenceStr, "%d", &confidence)
@@ -306,7 +316,11 @@ func CLIFnAnswerWithContext(node Node) (Answer, error) {
 	// Collect tags
 	fmt.Print("Tags (comma-separated, press Enter to skip): ")
 	var tagsStr string
-	fmt.Scanln(&tagsStr)
+	_, err = fmt.Scanln(&tagsStr)
+	if err != nil {
+		return Answer{}, fmt.Errorf("invalid input: %w", err)
+	}
+
 	if tagsStr != "" {
 		tags := strings.Split(strings.TrimSpace(tagsStr), ",")
 		for i, tag := range tags {

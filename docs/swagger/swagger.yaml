@@ -40,6 +40,9 @@ definitions:
         items:
           $ref: '#/definitions/http.NodePresenter'
         type: array
+      title:
+        example: Employment Discrimination Case
+        type: string
     type: object
   http.NodePresenter:
     description: A question node with potential answers for legal case context building
@@ -53,6 +56,101 @@ definitions:
         type: string
       question:
         example: Were you discriminated against in the workplace?
+        type: string
+    type: object
+  http.ValidateRequest:
+    description: DAG validation request containing the DAG structure to validate
+    properties:
+      dag:
+        $ref: '#/definitions/http.DAGPresenter'
+    required:
+    - dag
+    type: object
+  http.ValidationErrorPresenter:
+    description: Detailed validation error with context information
+    properties:
+      answer_id:
+        example: fc28c4b6-d185-cf56-a7e4-dead499ff1e8
+        type: string
+      code:
+        example: DAG_HAS_CYCLES
+        type: string
+      message:
+        example: DAG contains 1 cycle(s). A valid DAG must be acyclic
+        type: string
+      node_id:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      severity:
+        example: error
+        type: string
+    type: object
+  http.ValidationResultPresenter:
+    description: Comprehensive DAG validation results including errors, warnings,
+      and statistics
+    properties:
+      errors:
+        items:
+          $ref: '#/definitions/http.ValidationErrorPresenter'
+        type: array
+      is_valid:
+        example: true
+        type: boolean
+      statistics:
+        $ref: '#/definitions/http.ValidationStatisticsPresenter'
+      warnings:
+        items:
+          $ref: '#/definitions/http.ValidationWarningPresenter'
+        type: array
+    type: object
+  http.ValidationStatisticsPresenter:
+    description: Statistical information about the DAG structure and validation results
+    properties:
+      cycle_paths:
+        items:
+          type: string
+        type: array
+      has_cycles:
+        example: false
+        type: boolean
+      leaf_node_ids:
+        items:
+          type: string
+        type: array
+      leaf_nodes:
+        example: 2
+        type: integer
+      max_depth:
+        example: 3
+        type: integer
+      root_node_ids:
+        items:
+          type: string
+        type: array
+      root_nodes:
+        example: 1
+        type: integer
+      total_answers:
+        example: 12
+        type: integer
+      total_nodes:
+        example: 5
+        type: integer
+    type: object
+  http.ValidationWarningPresenter:
+    description: Non-critical validation issue that doesn't prevent DAG usage
+    properties:
+      answer_id:
+        example: fc28c4b6-d185-cf56-a7e4-dead499ff1e8
+        type: string
+      code:
+        example: DEEP_NESTING
+        type: string
+      message:
+        example: DAG has deep nesting which may impact performance
+        type: string
+      node_id:
+        example: 550e8400-e29b-41d4-a716-446655440000
         type: string
     type: object
   xhttp.ErrorResponse:
@@ -179,6 +277,39 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Update Legal Case DAG
+      tags:
+      - DAGs
+  /dags/validate:
+    post:
+      consumes:
+      - application/json
+      description: Validate a DAG structure to ensure it meets all requirements (single
+        root node, acyclic, valid relationships)
+      parameters:
+      - description: DAG structure to validate
+        in: body
+        name: dag
+        required: true
+        schema:
+          $ref: '#/definitions/http.ValidateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: DAG validation completed (may contain errors)
+          schema:
+            $ref: '#/definitions/http.ValidationResultPresenter'
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/xhttp.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/xhttp.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Validate Legal Case DAG
       tags:
       - DAGs
 securityDefinitions:

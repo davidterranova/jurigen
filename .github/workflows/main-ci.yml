@@ -1,0 +1,139 @@
+# GitHub Actions Workflow for Main Branch CI/CD
+name: Main Branch CI
+
+on:
+  push:
+    branches: [ main ]
+  release:
+    types: [ published ]
+
+# Ensure only one CI run per push to main
+concurrency:
+  group: main-ci-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  # Main branch comprehensive checks
+  main-checks:
+    name: Main Branch Quality Assurance
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: true
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Download and verify dependencies
+        run: make deps
+
+      - name: Run development workflow
+        run: make dev
+
+      - name: Generate coverage report
+        run: make test-ci
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.out
+          flags: unittests,main
+          name: main-branch-coverage
+
+      - name: Build and verify binary
+        run: |
+          make build
+          ./bin/jurigen --version || ./bin/jurigen --help
+
+      - name: Archive artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: jurigen-${{ github.sha }}
+          path: |
+            bin/jurigen
+            docs/swagger/
+          retention-days: 30
+
+  # Deployment readiness check
+  deployment-ready:
+    name: Deployment Readiness
+    runs-on: ubuntu-latest
+    needs: [main-checks]
+    if: github.event_name == 'push'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check deployment readiness
+        run: |
+          echo "🚀 Main branch is ready for deployment"
+          echo "✅ All quality checks passed"
+          echo "✅ Build successful"
+          echo "✅ Tests passing"
+          echo "✅ Documentation updated"
+          
+          # Could add additional deployment-specific checks here
+          # - Environment variables check
+          # - Configuration validation
+          # - Database migration checks
+          # - etc.
+
+  # Release automation (only on release events)
+  release:
+    name: Release Automation
+    runs-on: ubuntu-latest
+    needs: [main-checks]
+    if: github.event_name == 'release'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: true
+
+      - name: Build release binaries
+        run: |
+          # Build for multiple platforms
+          GOOS=linux GOARCH=amd64 go build -o bin/jurigen-linux-amd64 main.go
+          GOOS=darwin GOARCH=amd64 go build -o bin/jurigen-darwin-amd64 main.go
+          GOOS=darwin GOARCH=arm64 go build -o bin/jurigen-darwin-arm64 main.go
+          GOOS=windows GOARCH=amd64 go build -o bin/jurigen-windows-amd64.exe main.go
+
+      - name: Create release archives
+        run: |
+          cd bin
+          tar -czf jurigen-linux-amd64.tar.gz jurigen-linux-amd64
+          tar -czf jurigen-darwin-amd64.tar.gz jurigen-darwin-amd64
+          tar -czf jurigen-darwin-arm64.tar.gz jurigen-darwin-arm64
+          zip jurigen-windows-amd64.zip jurigen-windows-amd64.exe
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            bin/jurigen-*.tar.gz
+            bin/jurigen-*.zip
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

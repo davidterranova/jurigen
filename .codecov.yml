@@ -1,0 +1,78 @@
+# Codecov configuration for Jurigen Legal Case Context Builder
+# Documentation: https://docs.codecov.io/docs/codecov-yaml
+
+codecov:
+  require_ci_to_pass: true
+  notify:
+    after_n_builds: 1
+    wait_for_ci: true
+
+coverage:
+  precision: 2
+  round: down
+  range: "70...95"
+
+  status:
+    project:
+      default:
+        target: 75%
+        threshold: 2%
+        base: auto
+        if_ci_failed: error
+        informational: false
+        only_pulls: false
+
+    patch:
+      default:
+        target: 70%
+        threshold: 5%
+        base: auto
+        if_ci_failed: error
+        informational: false
+        only_pulls: true
+
+  ignore:
+    - "docs/"
+    - "scripts/"
+    - "bin/"
+    - "*.pb.go"
+    - "*_mock.go"
+    - "*.gen.go"
+    - "testdata/"
+    - "internal/adapter/http/testdata/"
+    - "internal/usecase/testdata/"
+    - "docs/swagger/docs.go"
+
+comment:
+  layout: "reach,diff,flags,tree,reach"
+  behavior: default
+  require_changes: false
+  require_base: false
+  require_head: true
+  branches:
+    - "main"
+    - "develop"
+
+github_checks:
+  annotations: true
+
+flag_management:
+  default_rules:
+    carryforward: true
+    statuses:
+      - type: project
+        target: 75%
+      - type: patch
+        target: 70%
+
+flags:
+  unittests:
+    paths:
+      - "internal/"
+      - "pkg/"
+    carryforward: true
+  main:
+    paths:
+      - "internal/"
+      - "pkg/"
+    carryforward: true

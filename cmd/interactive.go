@@ -116,6 +116,10 @@ var interactiveCmd = &cobra.Command{
 func init() {
 	interactiveCmd.Flags().StringVarP(&interactiveDagFile, "dag", "d", "", "Path to the DAG JSON file (required)")
 	interactiveCmd.Flags().BoolVarP(&collectContext, "context", "c", false, "Collect additional context and metadata for each answer")
-	interactiveCmd.MarkFlagRequired("dag")
+	err := interactiveCmd.MarkFlagRequired("dag")
+	if err != nil {
+		log.Fatalf("error marking flag as required: %v", err)
+	}
+
 	rootCmd.AddCommand(interactiveCmd)
 }

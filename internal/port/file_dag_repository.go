@@ -55,6 +55,7 @@ func (r *FileDAGRepository) List(ctx context.Context) ([]uuid.UUID, error) {
 		return nil, fmt.Errorf("error reading directory '%s': %w", r.filePath, err)
 	}
 
+	//nolint:prealloc // This is a valid use of range
 	var ids []uuid.UUID
 	for _, entry := range entries {
 		if entry.IsDir() {

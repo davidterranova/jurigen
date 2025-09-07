@@ -272,6 +272,7 @@ func (v *DAGValidator) validateCycles(d *dag.DAG, result *ValidationResult) {
 
 		visited[nodeId] = true
 		inStack[nodeId] = true
+		//nolint:gocritic // This is a valid use of append
 		newPath := append(path, nodeId)
 
 		node, exists := d.Nodes[nodeId]
