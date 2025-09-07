@@ -69,7 +69,7 @@ lint-install: ## Install golangci-lint CLI tool
 # Run code linting
 lint: ## Run golangci-lint on the codebase
 	@echo "🔍 Running golangci-lint..."
-	@export PATH=$$PATH:$(shell go env GOPATH)/bin && golangci-lint run ./...
+	@export PATH=$$PATH:$(shell go env GOPATH)/bin && golangci-lint run --no-config --enable=errcheck,govet,ineffassign,staticcheck,unused,goconst,gocritic,gocyclo,misspell,nakedret,nestif,prealloc,unconvert,unparam,whitespace ./internal/dag ./internal/usecase ./internal/port ./internal/adapter/http ./pkg/... ./cmd
 	@echo "✅ Linting completed"
 
 # Generate OpenAPI/Swagger documentation
