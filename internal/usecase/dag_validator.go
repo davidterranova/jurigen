@@ -9,19 +9,19 @@ import (
 
 // ValidationResult represents the result of DAG validation
 type ValidationResult struct {
-	IsValid         bool                 `json:"is_valid"`
-	Errors          []ValidationError    `json:"errors,omitempty"`
-	Warnings        []ValidationWarning  `json:"warnings,omitempty"`
-	Statistics      ValidationStatistics `json:"statistics"`
+	IsValid    bool                 `json:"is_valid"`
+	Errors     []ValidationError    `json:"errors,omitempty"`
+	Warnings   []ValidationWarning  `json:"warnings,omitempty"`
+	Statistics ValidationStatistics `json:"statistics"`
 }
 
 // ValidationError represents a validation error
 type ValidationError struct {
-	Code        string `json:"code"`
-	Message     string `json:"message"`
-	NodeID      string `json:"node_id,omitempty"`
-	AnswerID    string `json:"answer_id,omitempty"`
-	Severity    string `json:"severity"` // "error", "warning"
+	Code     string `json:"code"`
+	Message  string `json:"message"`
+	NodeID   string `json:"node_id,omitempty"`
+	AnswerID string `json:"answer_id,omitempty"`
+	Severity string `json:"severity"` // "error", "warning"
 }
 
 // ValidationWarning represents a validation warning
@@ -34,15 +34,15 @@ type ValidationWarning struct {
 
 // ValidationStatistics provides DAG structure statistics
 type ValidationStatistics struct {
-	TotalNodes      int      `json:"total_nodes"`
-	RootNodes       int      `json:"root_nodes"`
-	LeafNodes       int      `json:"leaf_nodes"`
-	TotalAnswers    int      `json:"total_answers"`
-	MaxDepth        int      `json:"max_depth"`
-	HasCycles       bool     `json:"has_cycles"`
-	RootNodeIDs     []string `json:"root_node_ids,omitempty"`
-	LeafNodeIDs     []string `json:"leaf_node_ids,omitempty"`
-	CyclePaths      []string `json:"cycle_paths,omitempty"`
+	TotalNodes   int      `json:"total_nodes"`
+	RootNodes    int      `json:"root_nodes"`
+	LeafNodes    int      `json:"leaf_nodes"`
+	TotalAnswers int      `json:"total_answers"`
+	MaxDepth     int      `json:"max_depth"`
+	HasCycles    bool     `json:"has_cycles"`
+	RootNodeIDs  []string `json:"root_node_ids,omitempty"`
+	LeafNodeIDs  []string `json:"leaf_node_ids,omitempty"`
+	CyclePaths   []string `json:"cycle_paths,omitempty"`
 }
 
 // DAGValidator provides comprehensive DAG validation functionality
@@ -56,10 +56,10 @@ func NewDAGValidator() *DAGValidator {
 // ValidateDAG performs comprehensive validation of a DAG structure
 func (v *DAGValidator) ValidateDAG(d *dag.DAG) ValidationResult {
 	result := ValidationResult{
-		IsValid:         true,
-		Errors:          []ValidationError{},
-		Warnings:        []ValidationWarning{},
-		Statistics:      ValidationStatistics{},
+		IsValid:    true,
+		Errors:     []ValidationError{},
+		Warnings:   []ValidationWarning{},
+		Statistics: ValidationStatistics{},
 	}
 
 	if d == nil {
