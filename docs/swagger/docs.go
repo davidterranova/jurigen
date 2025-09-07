@@ -56,6 +56,57 @@ const docTemplate = `{
                 }
             }
         },
+        "/dags/validate": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Validate a DAG structure to ensure it meets all requirements (single root node, acyclic, valid relationships)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "DAGs"
+                ],
+                "summary": "Validate Legal Case DAG",
+                "parameters": [
+                    {
+                        "description": "DAG structure to validate",
+                        "name": "dag",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.ValidateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "DAG validation completed (may contain errors)",
+                        "schema": {
+                            "$ref": "#/definitions/http.ValidationResultPresenter"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body",
+                        "schema": {
+                            "$ref": "#/definitions/xhttp.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/xhttp.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/dags/{dagId}": {
             "get": {
                 "security": [
@@ -229,6 +280,10 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/http.NodePresenter"
                     }
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Employment Discrimination Case"
                 }
             }
         },
@@ -249,6 +304,139 @@ const docTemplate = `{
                 "question": {
                     "type": "string",
                     "example": "Were you discriminated against in the workplace?"
+                }
+            }
+        },
+        "http.ValidateRequest": {
+            "description": "DAG validation request containing the DAG structure to validate",
+            "type": "object",
+            "required": [
+                "dag"
+            ],
+            "properties": {
+                "dag": {
+                    "$ref": "#/definitions/http.DAGPresenter"
+                }
+            }
+        },
+        "http.ValidationErrorPresenter": {
+            "description": "Detailed validation error with context information",
+            "type": "object",
+            "properties": {
+                "answer_id": {
+                    "type": "string",
+                    "example": "fc28c4b6-d185-cf56-a7e4-dead499ff1e8"
+                },
+                "code": {
+                    "type": "string",
+                    "example": "DAG_HAS_CYCLES"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "DAG contains 1 cycle(s). A valid DAG must be acyclic"
+                },
+                "node_id": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "severity": {
+                    "type": "string",
+                    "example": "error"
+                }
+            }
+        },
+        "http.ValidationResultPresenter": {
+            "description": "Comprehensive DAG validation results including errors, warnings, and statistics",
+            "type": "object",
+            "properties": {
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/http.ValidationErrorPresenter"
+                    }
+                },
+                "is_valid": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "statistics": {
+                    "$ref": "#/definitions/http.ValidationStatisticsPresenter"
+                },
+                "warnings": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/http.ValidationWarningPresenter"
+                    }
+                }
+            }
+        },
+        "http.ValidationStatisticsPresenter": {
+            "description": "Statistical information about the DAG structure and validation results",
+            "type": "object",
+            "properties": {
+                "cycle_paths": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "has_cycles": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "leaf_node_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "leaf_nodes": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "max_depth": {
+                    "type": "integer",
+                    "example": 3
+                },
+                "root_node_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "root_nodes": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "total_answers": {
+                    "type": "integer",
+                    "example": 12
+                },
+                "total_nodes": {
+                    "type": "integer",
+                    "example": 5
+                }
+            }
+        },
+        "http.ValidationWarningPresenter": {
+            "description": "Non-critical validation issue that doesn't prevent DAG usage",
+            "type": "object",
+            "properties": {
+                "answer_id": {
+                    "type": "string",
+                    "example": "fc28c4b6-d185-cf56-a7e4-dead499ff1e8"
+                },
+                "code": {
+                    "type": "string",
+                    "example": "DEEP_NESTING"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "DAG has deep nesting which may impact performance"
+                },
+                "node_id": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
                 }
             }
         },
