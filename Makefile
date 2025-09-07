@@ -1,5 +1,5 @@
 # Jurigen Legal Case Context Builder
-.PHONY: help build test clean swagger swagger-serve mocks mocks-clean generate lint lint-install workflow-branch workflow-commit workflow-pr workflow-full
+.PHONY: help build test test-coverage test-ci test-verbose clean swagger swagger-serve mocks mocks-clean generate lint lint-install fmt fmt-check vet deps check-deps dev server interactive dag-show workflow-branch workflow-commit workflow-pr workflow-full workflow-help
 
 # Default target
 help: ## Show this help message
@@ -17,6 +17,10 @@ test: ## Run all tests
 # Test with coverage
 test-coverage: ## Run tests with coverage report
 	go test -cover ./...
+
+# Test with coverage and race detection for CI
+test-ci: ## Run tests with coverage, race detection, and coverage file output for CI
+	go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
 
 # Test with verbose output
 test-verbose: ## Run tests with verbose output
@@ -91,6 +95,22 @@ swagger-serve: ## Serve Swagger UI locally (requires swagger generation first)
 fmt: ## Format Go code
 	go fmt ./...
 
+# Check code formatting
+fmt-check: ## Check if Go code is formatted correctly
+	@echo "🔍 Checking Go code formatting..."
+	@if [ "$(shell gofmt -s -l . | wc -l)" -gt 0 ]; then \
+		echo "❌ Go code is not formatted. Please run 'make fmt'"; \
+		gofmt -s -l .; \
+		exit 1; \
+	fi
+	@echo "✅ Go code is properly formatted"
+
+# Verify Go code
+vet: ## Run go vet to check for suspicious constructs
+	@echo "🔍 Running go vet..."
+	go vet ./...
+	@echo "✅ Go vet completed"
+
 # Run the server
 server: ## Start the HTTP API server
 	go run main.go server
@@ -119,6 +139,13 @@ dag-show: ## Show DAG structure (requires --dag flag)
 
 # Development workflow  
 dev: clean swagger generate lint test ## Full development build: clean, generate docs, generate code, lint, test
+
+# Download dependencies and verify
+deps: ## Download and verify dependencies
+	@echo "📦 Downloading Go dependencies..."
+	go mod download
+	go mod verify
+	@echo "✅ Dependencies verified"
 
 # Check if required tools are installed
 check-deps: ## Check if required development tools are installed
