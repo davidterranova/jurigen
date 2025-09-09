@@ -8,50 +8,50 @@ help: ## Show this help message
 
 # Build the application
 build: ## Build the jurigen binary
-	go build -o bin/jurigen main.go
+	cd backend && go build -o bin/jurigen ./main.go
 
 # Test all packages
 test: ## Run all tests
-	go test ./...
+	cd backend && go test ./...
 
 # Test with coverage
 test-coverage: ## Run tests with coverage report
-	go test -cover ./...
+	cd backend && go test -cover ./...
 
 # Test with coverage and race detection for CI
 test-ci: ## Run tests with coverage, race detection, and coverage file output for CI
-	go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+	cd backend && go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
 
 # Test with verbose output
 test-verbose: ## Run tests with verbose output
-	go test -v ./...
+	cd backend && go test -v ./...
 
 # Clean build artifacts
 clean: ## Clean build artifacts and generated files
-	rm -rf bin/
-	rm -rf docs/
+	rm -rf backend/bin/
+	rm -rf backend/docs/
 
 # Generate mocks for testing
 mocks: ## Generate all mocks for interfaces using go:generate directives
 	@echo "🔧 Generating mocks using go:generate directives..."
-	@mkdir -p internal/usecase/testdata/mocks
-	@mkdir -p internal/adapter/http/testdata/mocks
-	go generate ./internal/usecase/
-	go generate ./internal/adapter/http/
+	@mkdir -p backend/internal/usecase/testdata/mocks
+	@mkdir -p backend/internal/adapter/http/testdata/mocks
+	cd backend && go generate ./internal/usecase/
+	cd backend && go generate ./internal/adapter/http/
 	@echo "✅ All mocks generated using go:generate directives"
 
 # Generate all code (more idiomatic Go approach)
 generate: ## Generate all code using go:generate directives (idiomatic Go way)
 	@echo "🔧 Running go generate for all packages..."
-	go generate ./...
+	cd backend && go generate ./...
 	@echo "✅ Code generation complete"
 
 # Clean generated mocks
 mocks-clean: ## Remove generated mock files
 	@echo "🧹 Cleaning generated mocks..."
-	rm -rf test/mocks/
-	rm -rf internal/usecase/testdata/mocks/
-	rm -rf internal/adapter/http/testdata/mocks/
+	rm -rf backend/test/mocks/
+	rm -rf backend/internal/usecase/testdata/mocks/
+	rm -rf backend/internal/adapter/http/testdata/mocks/
 	@echo "✅ Mocks cleaned"
 
 # Install swagger generation tool
@@ -69,18 +69,18 @@ lint-install: ## Install golangci-lint CLI tool
 # Run code linting
 lint: ## Run golangci-lint on the codebase
 	@echo "🔍 Running golangci-lint..."
-	@export PATH=$$PATH:$(shell go env GOPATH)/bin && golangci-lint run --no-config --enable=errcheck,govet,ineffassign,staticcheck,unused,goconst,gocritic,gocyclo,misspell,nakedret,nestif,prealloc,unconvert,unparam,whitespace ./internal/dag ./internal/usecase ./internal/port ./internal/adapter/http ./pkg/... ./cmd
+	@export PATH=$$PATH:$(shell go env GOPATH)/bin && cd backend && golangci-lint run --no-config --enable=errcheck,govet,ineffassign,staticcheck,unused,goconst,gocritic,gocyclo,misspell,nakedret,nestif,prealloc,unconvert,unparam,whitespace ./internal/dag ./internal/usecase ./internal/port ./internal/adapter/http ./pkg/... ./cmd
 	@echo "✅ Linting completed"
 
 lint-fix: ## Run golangci-lint on the codebase with fix enabled
 	@echo "🔍 Running golangci-lint with fix enabled..."
-	@export PATH=$$PATH:$(shell go env GOPATH)/bin && golangci-lint run --no-config --enable=errcheck,govet,ineffassign,staticcheck,unused,goconst,gocritic,gocyclo,misspell,nakedret,nestif,prealloc,unconvert,unparam,whitespace ./internal/dag ./internal/usecase ./internal/port ./internal/adapter/http ./pkg/... ./cmd --fix
+	@export PATH=$$PATH:$(shell go env GOPATH)/bin && cd backend && golangci-lint run --no-config --enable=errcheck,govet,ineffassign,staticcheck,unused,goconst,gocritic,gocyclo,misspell,nakedret,nestif,prealloc,unconvert,unparam,whitespace ./internal/dag ./internal/usecase ./internal/port ./internal/adapter/http ./pkg/... ./cmd --fix
 	@echo "✅ Linting completed with fix enabled"
 
 # Generate OpenAPI/Swagger documentation
 swagger: swagger-install ## Generate OpenAPI documentation from code annotations
 	@echo "🔄 Generating OpenAPI/Swagger documentation..."
-	export PATH=$$PATH:$(shell go env GOPATH)/bin && swag init --dir . --output docs/swagger --parseDependency --parseInternal
+	export PATH=$$PATH:$(shell go env GOPATH)/bin && cd backend && swag init --dir . --output docs/swagger --parseDependency --parseInternal
 	@echo "✅ OpenAPI documentation generated in docs/swagger/"
 	@echo "📄 Spec file: docs/swagger/swagger.json"
 	@echo "📄 YAML file: docs/swagger/swagger.yaml"
@@ -88,17 +88,17 @@ swagger: swagger-install ## Generate OpenAPI documentation from code annotations
 
 # Serve Swagger UI locally
 swagger-serve: ## Serve Swagger UI locally (requires swagger generation first)
-	@if [ ! -f docs/swagger/swagger.json ]; then \
+	@if [ ! -f backend/docs/swagger/swagger.json ]; then \
 		echo "❌ No swagger docs found. Run 'make swagger' first."; \
 		exit 1; \
 	fi
 	@echo "🌐 Starting Swagger UI server on http://localhost:8081/swagger/"
 	@echo "🔧 Press Ctrl+C to stop"
-	@cd docs/swagger && python3 -m http.server 8081
+	@cd backend/docs/swagger && python3 -m http.server 8081
 
 # Format code
 fmt: ## Format Go code
-	go fmt ./...
+	cd backend && go fmt ./...
 
 # Check code formatting
 fmt-check: ## Check if Go code is formatted correctly
@@ -113,12 +113,12 @@ fmt-check: ## Check if Go code is formatted correctly
 # Verify Go code
 vet: ## Run go vet to check for suspicious constructs
 	@echo "🔍 Running go vet..."
-	go vet ./...
+	cd backend && go vet ./...
 	@echo "✅ Go vet completed"
 
 # Run the server
 server: ## Start the HTTP API server
-	go run main.go server
+	cd backend && go run main.go server
 
 # Run interactive CLI
 interactive: ## Start interactive DAG traversal (requires --dag flag)
@@ -128,9 +128,9 @@ interactive: ## Start interactive DAG traversal (requires --dag flag)
 		exit 1; \
 	fi
 	@if [ "$(CONTEXT)" = "true" ]; then \
-		go run main.go interactive --dag $(DAG_FILE) --context; \
+		cd backend && go run main.go interactive --dag $(DAG_FILE) --context; \
 	else \
-		go run main.go interactive --dag $(DAG_FILE); \
+		cd backend && go run main.go interactive --dag $(DAG_FILE); \
 	fi
 
 # Show DAG structure
@@ -140,7 +140,7 @@ dag-show: ## Show DAG structure (requires --dag flag)
 		echo "❌ DAG_FILE is required. Example: make dag-show DAG_FILE=dag.json"; \
 		exit 1; \
 	fi
-	go run main.go dag --dag $(DAG_FILE)
+	go run backend/main.go dag --dag $(DAG_FILE)
 
 # Development workflow  
 dev: clean swagger generate lint test ## Full development build: clean, generate docs, generate code, lint, test
@@ -148,8 +148,8 @@ dev: clean swagger generate lint test ## Full development build: clean, generate
 # Download dependencies and verify
 deps: ## Download and verify dependencies
 	@echo "📦 Downloading Go dependencies..."
-	go mod download
-	go mod verify
+	cd backend && go mod download
+	cd backend && go mod verify
 	@echo "✅ Dependencies verified"
 
 # Check if required tools are installed
