@@ -1,8 +1,7 @@
 ---
 description: General product description
-alwaysApply: true
+alwaysApply: false
 ---
-
 # Product context
 This micro service is part of a larger project that aims to provide a context builder for a legal case.
 It relies on directed acyclic graph to build a context by asking questions to the user.

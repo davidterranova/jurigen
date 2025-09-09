@@ -1,5 +1,5 @@
 ---
-description: Testing practices
+description: Testing practices to ensure code is strong and no further regression are created
 alwaysApply: true
 ---
 

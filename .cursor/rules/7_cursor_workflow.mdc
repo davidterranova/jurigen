@@ -1,5 +1,5 @@
 ---
-description:
+description: how to process user request to ensure work is tracked in small and understandable chunks
 globs:
 alwaysApply: true
 ---

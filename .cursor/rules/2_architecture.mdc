@@ -1,8 +1,7 @@
 ---
-description: General architecture
-alwaysApply: true
+description: General architecture guidelines for decoupled and open for changes new feature development
+alwaysApply: false
 ---
-
 ### Architecture Patterns:
 - Apply **Clean Architecture** by structuring code into handlers/controllers, services/use cases, repositories/data access, and domain models.
 - Use **domain-driven design** principles where applicable.
