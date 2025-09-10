@@ -1,5 +1,5 @@
 # Jurigen Legal Case Context Builder
-.PHONY: help build test test-coverage test-ci test-verbose clean swagger swagger-serve mocks mocks-clean generate lint lint-install fmt fmt-check vet deps check-deps dev server interactive dag-show workflow-branch workflow-commit workflow-pr workflow-full workflow-help
+.PHONY: help build test test-coverage test-ci test-verbose clean swagger swagger-serve mocks mocks-clean generate lint lint-install fmt fmt-check vet deps check-deps dev server frontend-dev start-all interactive dag-show workflow-branch workflow-commit workflow-pr workflow-full workflow-help
 
 # Default target
 help: ## Show this help message
@@ -119,6 +119,22 @@ vet: ## Run go vet to check for suspicious constructs
 # Run the server
 server: ## Start the HTTP API server
 	cd backend && go run main.go server
+
+# Start frontend development server
+frontend-dev: ## Start the frontend development server
+	@echo "🚀 Starting frontend development server..."
+	cd frontend && npm run dev
+
+# Start both backend and frontend together
+start-all: ## Start both backend and frontend development servers
+	@echo "🚀 Starting both backend and frontend servers..."
+	@echo "🔧 Backend will be available at: http://localhost:8080"
+	@echo "🎨 Frontend will be available at: http://localhost:5173"
+	@echo "⚡ Press Ctrl+C to stop both servers"
+	@trap 'kill %1 %2 2>/dev/null' INT; \
+	cd backend && go run main.go server & \
+	cd frontend && npm run dev & \
+	wait
 
 # Run interactive CLI
 interactive: ## Start interactive DAG traversal (requires --dag flag)
