@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"davidterranova/jurigen/backend/internal/adapter/http/testdata/mocks"
-	"davidterranova/jurigen/backend/internal/dag"
+	"davidterranova/jurigen/backend/internal/model"
 	"davidterranova/jurigen/backend/internal/usecase"
 	"encoding/json"
 	"net/http"
@@ -35,7 +35,7 @@ func TestDAGHandler_Update(t *testing.T) {
 			requestBody: NewDAGPresenter(testDAG),
 			setupMock: func(mockApp *mocks.MockApp) {
 				mockApp.EXPECT().Update(gomock.Any(), gomock.Any()).DoAndReturn(
-					func(ctx context.Context, cmd usecase.CmdUpdateDAG) (*dag.DAG, error) {
+					func(ctx context.Context, cmd usecase.CmdUpdateDAG) (*model.DAG, error) {
 						// Verify the command has the correct DAG ID
 						assert.Equal(t, testDAG.Id.String(), cmd.DAGId)
 						assert.NotNil(t, cmd.DAG)
@@ -234,18 +234,18 @@ func TestDAGHandler_Update_ComplexDAG(t *testing.T) {
 }
 
 // Helper function to create a test DAG
-func createTestDAG() *dag.DAG {
+func createTestDAG() *model.DAG {
 	dagId := uuid.New()
 	nodeId := uuid.New()
 	answerId := uuid.New()
 
-	return &dag.DAG{
+	return &model.DAG{
 		Id: dagId,
-		Nodes: map[uuid.UUID]dag.Node{
+		Nodes: map[uuid.UUID]model.Node{
 			nodeId: {
 				Id:       nodeId,
 				Question: "Is this a test question?",
-				Answers: []dag.Answer{
+				Answers: []model.Answer{
 					{
 						Id:        answerId,
 						Statement: "Yes, this is a test",
@@ -258,7 +258,7 @@ func createTestDAG() *dag.DAG {
 }
 
 // Helper function to create a complex test DAG with metadata
-func createComplexTestDAG() *dag.DAG {
+func createComplexTestDAG() *model.DAG {
 	dagId := uuid.New()
 	rootNodeId := uuid.New()
 	leafNodeId := uuid.New()
@@ -266,13 +266,13 @@ func createComplexTestDAG() *dag.DAG {
 	answerId2 := uuid.New()
 	leafAnswerId := uuid.New()
 
-	return &dag.DAG{
+	return &model.DAG{
 		Id: dagId,
-		Nodes: map[uuid.UUID]dag.Node{
+		Nodes: map[uuid.UUID]model.Node{
 			rootNodeId: {
 				Id:       rootNodeId,
 				Question: "Did you experience workplace discrimination?",
-				Answers: []dag.Answer{
+				Answers: []model.Answer{
 					{
 						Id:          answerId1,
 						Statement:   "Yes, I experienced discrimination",
@@ -294,7 +294,7 @@ func createComplexTestDAG() *dag.DAG {
 			leafNodeId: {
 				Id:       leafNodeId,
 				Question: "What type of discrimination did you experience?",
-				Answers: []dag.Answer{
+				Answers: []model.Answer{
 					{
 						Id:          leafAnswerId,
 						Statement:   "Age-based discrimination",

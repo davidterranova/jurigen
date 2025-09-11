@@ -2,7 +2,7 @@ package pkg
 
 import (
 	"context"
-	"davidterranova/jurigen/backend/internal/dag"
+	"davidterranova/jurigen/backend/internal/model"
 	"davidterranova/jurigen/backend/internal/usecase"
 
 	"github.com/google/uuid"
@@ -19,7 +19,7 @@ type dagUseCase struct {
 }
 
 type GetDAGUseCase interface {
-	Get(ctx context.Context, cmd usecase.CmdGetDAG) (*dag.DAG, error)
+	Get(ctx context.Context, cmd usecase.CmdGetDAG) (*model.DAG, error)
 }
 
 type ListDAGsUseCase interface {
@@ -27,7 +27,7 @@ type ListDAGsUseCase interface {
 }
 
 type UpdateDAGUseCase interface {
-	Execute(ctx context.Context, cmd usecase.CmdUpdateDAG) (*dag.DAG, error)
+	Execute(ctx context.Context, cmd usecase.CmdUpdateDAG) (*model.DAG, error)
 }
 
 func New(dagRepository usecase.DAGRepository) *App {
@@ -40,7 +40,7 @@ func New(dagRepository usecase.DAGRepository) *App {
 	}
 }
 
-func (a *App) Get(ctx context.Context, cmd usecase.CmdGetDAG) (*dag.DAG, error) {
+func (a *App) Get(ctx context.Context, cmd usecase.CmdGetDAG) (*model.DAG, error) {
 	return a.dagUseCase.Get(ctx, cmd)
 }
 
@@ -48,6 +48,6 @@ func (a *App) List(ctx context.Context, cmd usecase.CmdListDAGs) ([]uuid.UUID, e
 	return a.dagUseCase.List(ctx, cmd)
 }
 
-func (a *App) Update(ctx context.Context, cmd usecase.CmdUpdateDAG) (*dag.DAG, error) {
+func (a *App) Update(ctx context.Context, cmd usecase.CmdUpdateDAG) (*model.DAG, error) {
 	return a.dagUseCase.Execute(ctx, cmd)
 }

@@ -2,7 +2,7 @@ package port
 
 import (
 	"context"
-	"davidterranova/jurigen/backend/internal/dag"
+	"davidterranova/jurigen/backend/internal/model"
 	"davidterranova/jurigen/backend/internal/usecase"
 	"os"
 	"path/filepath"
@@ -32,21 +32,21 @@ func TestFileDAGRepository_CreateAndGet(t *testing.T) {
 
 	tests := []struct {
 		name    string
-		setup   func() (*FileDAGRepository, *dag.DAG)
+		setup   func() (*FileDAGRepository, *model.DAG)
 		wantErr bool
 	}{
 		{
 			name: "successfully create and retrieve DAG",
-			setup: func() (*FileDAGRepository, *dag.DAG) {
+			setup: func() (*FileDAGRepository, *model.DAG) {
 				repo := NewFileDAGRepository(tempDir)
-				testDAG := dag.NewDAG("Test DAG")
+				testDAG := model.NewDAG("Test DAG")
 				return repo, testDAG
 			},
 			wantErr: false,
 		},
 		{
 			name: "create nil DAG should fail",
-			setup: func() (*FileDAGRepository, *dag.DAG) {
+			setup: func() (*FileDAGRepository, *model.DAG) {
 				repo := NewFileDAGRepository(tempDir)
 				return repo, nil
 			},
@@ -99,7 +99,7 @@ func TestFileDAGRepository_Create_AlreadyExists(t *testing.T) {
 
 	repo := NewFileDAGRepository(tempDir)
 	ctx := context.Background()
-	testDAG := dag.NewDAG("Test DAG")
+	testDAG := model.NewDAG("Test DAG")
 
 	// Create the DAG first time
 	err = repo.Create(ctx, testDAG)
@@ -166,7 +166,7 @@ func TestFileDAGRepository_Delete(t *testing.T) {
 
 	repo := NewFileDAGRepository(tempDir)
 	ctx := context.Background()
-	testDAG := dag.NewDAG("Test DAG")
+	testDAG := model.NewDAG("Test DAG")
 
 	// Create a DAG first
 	err = repo.Create(ctx, testDAG)
@@ -226,8 +226,8 @@ func TestFileDAGRepository_List(t *testing.T) {
 	assert.Len(t, ids, 0)
 
 	// Add some DAGs
-	dag1 := dag.NewDAG("Test DAG")
-	dag2 := dag.NewDAG("Test DAG")
+	dag1 := model.NewDAG("Test DAG")
+	dag2 := model.NewDAG("Test DAG")
 
 	err = repo.Create(ctx, dag1)
 	require.NoError(t, err)
@@ -255,7 +255,7 @@ func TestFileDAGRepository_List_WithInvalidFiles(t *testing.T) {
 	ctx := context.Background()
 
 	// Create some valid DAG files
-	validDAG := dag.NewDAG("Test DAG")
+	validDAG := model.NewDAG("Test DAG")
 	err = repo.Create(ctx, validDAG)
 	require.NoError(t, err)
 
@@ -306,19 +306,19 @@ func TestFileDAGRepository_Update(t *testing.T) {
 
 	repo := NewFileDAGRepository(tempDir)
 	ctx := context.Background()
-	testDAG := dag.NewDAG("Test DAG")
+	testDAG := model.NewDAG("Test DAG")
 
 	// Create a DAG first
 	err = repo.Create(ctx, testDAG)
 	require.NoError(t, err)
 
 	// Update function that modifies the DAG
-	updateFn := func(d dag.DAG) (dag.DAG, error) {
+	updateFn := func(d model.DAG) (model.DAG, error) {
 		// Add a test node to the DAG
-		testNode := dag.Node{
+		testNode := model.Node{
 			Id:       uuid.New(),
 			Question: "Updated question",
-			Answers:  []dag.Answer{},
+			Answers:  []model.Answer{},
 		}
 		d.Nodes[testNode.Id] = testNode
 		return d, nil
@@ -357,7 +357,7 @@ func TestFileDAGRepository_Update_NotFound(t *testing.T) {
 	ctx := context.Background()
 	nonExistentId := uuid.New()
 
-	updateFn := func(d dag.DAG) (dag.DAG, error) {
+	updateFn := func(d model.DAG) (model.DAG, error) {
 		return d, nil
 	}
 
@@ -377,15 +377,15 @@ func TestFileDAGRepository_Update_FunctionFails(t *testing.T) {
 
 	repo := NewFileDAGRepository(tempDir)
 	ctx := context.Background()
-	testDAG := dag.NewDAG("Test DAG")
+	testDAG := model.NewDAG("Test DAG")
 
 	// Create a DAG
 	err = repo.Create(ctx, testDAG)
 	require.NoError(t, err)
 
 	// Update function that returns an error
-	updateFn := func(d dag.DAG) (dag.DAG, error) {
-		return dag.DAG{}, assert.AnError
+	updateFn := func(d model.DAG) (model.DAG, error) {
+		return model.DAG{}, assert.AnError
 	}
 
 	err = repo.Update(ctx, testDAG.Id, updateFn)
@@ -404,14 +404,14 @@ func TestFileDAGRepository_Update_IDChange(t *testing.T) {
 
 	repo := NewFileDAGRepository(tempDir)
 	ctx := context.Background()
-	testDAG := dag.NewDAG("Test DAG")
+	testDAG := model.NewDAG("Test DAG")
 
 	// Create a DAG
 	err = repo.Create(ctx, testDAG)
 	require.NoError(t, err)
 
 	// Update function that tries to change the ID
-	updateFn := func(d dag.DAG) (dag.DAG, error) {
+	updateFn := func(d model.DAG) (model.DAG, error) {
 		d.Id = uuid.New() // This should cause an error
 		return d, nil
 	}
@@ -434,7 +434,7 @@ func TestFileDAGRepository_CreateDirectoryIfNotExists(t *testing.T) {
 	nestedDir := filepath.Join(tempBase, "nested", "directory", "structure")
 	repo := NewFileDAGRepository(nestedDir)
 	ctx := context.Background()
-	testDAG := dag.NewDAG("Test DAG")
+	testDAG := model.NewDAG("Test DAG")
 
 	// Create should create the directory structure
 	err = repo.Create(ctx, testDAG)
@@ -461,13 +461,13 @@ func TestFileDAGRepository_DAGWithComplexStructure(t *testing.T) {
 	ctx := context.Background()
 
 	// Create a complex DAG with nodes and answers
-	testDAG := dag.NewDAG("Test DAG")
+	testDAG := model.NewDAG("Test DAG")
 
 	// Root node
-	rootNode := dag.Node{
+	rootNode := model.Node{
 		Id:       uuid.New(),
 		Question: "What is your primary concern?",
-		Answers: []dag.Answer{
+		Answers: []model.Answer{
 			{
 				Id:        uuid.New(),
 				Statement: "Financial issues",
@@ -482,10 +482,10 @@ func TestFileDAGRepository_DAGWithComplexStructure(t *testing.T) {
 	}
 
 	// Secondary node
-	secondaryNode := dag.Node{
+	secondaryNode := model.Node{
 		Id:       uuid.New(),
 		Question: "How severe is the financial impact?",
-		Answers: []dag.Answer{
+		Answers: []model.Answer{
 			{
 				Id:          uuid.New(),
 				Statement:   "Minor impact",
@@ -553,13 +553,13 @@ func TestFileDAGRepository_RoundTripConsistency(t *testing.T) {
 
 	repo := NewFileDAGRepository(tempDir)
 	ctx := context.Background()
-	originalDAG := dag.NewDAG("Test DAG")
+	originalDAG := model.NewDAG("Test DAG")
 
 	// Add a complex node structure
-	node := dag.Node{
+	node := model.Node{
 		Id:       uuid.New(),
 		Question: "Test question with unicode: αβγ 中文 🚀",
-		Answers: []dag.Answer{
+		Answers: []model.Answer{
 			{
 				Id:          uuid.New(),
 				Statement:   "Answer with special chars: !@#$%^&*()",
@@ -583,11 +583,11 @@ func TestFileDAGRepository_RoundTripConsistency(t *testing.T) {
 	require.NoError(t, err)
 
 	// Update with a function that adds another node
-	updateFn := func(d dag.DAG) (dag.DAG, error) {
-		newNode := dag.Node{
+	updateFn := func(d model.DAG) (model.DAG, error) {
+		newNode := model.Node{
 			Id:       uuid.New(),
 			Question: "Updated question",
-			Answers:  []dag.Answer{},
+			Answers:  []model.Answer{},
 		}
 		d.Nodes[newNode.Id] = newNode
 		return d, nil
@@ -648,7 +648,7 @@ func TestFileDAGRepository_ErrorHandling_FilePermissions(t *testing.T) {
 
 	repo := NewFileDAGRepository(tempDir)
 	ctx := context.Background()
-	testDAG := dag.NewDAG("Test DAG")
+	testDAG := model.NewDAG("Test DAG")
 
 	// Create should fail due to permission issues
 	err = repo.Create(ctx, testDAG)

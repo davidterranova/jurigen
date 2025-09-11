@@ -2,7 +2,7 @@ package port
 
 import (
 	"context"
-	"davidterranova/jurigen/backend/internal/dag"
+	"davidterranova/jurigen/backend/internal/model"
 	"fmt"
 	"os"
 
@@ -123,7 +123,7 @@ func (r *HybridDAGRepository) Sync(ctx context.Context) error {
 			err = r.fileRepo.Create(ctx, dagObj)
 		} else {
 			// DAG exists in file, update it
-			err = r.fileRepo.Update(ctx, dagId, func(existing dag.DAG) (dag.DAG, error) {
+			err = r.fileRepo.Update(ctx, dagId, func(existing model.DAG) (model.DAG, error) {
 				return *dagObj, nil
 			})
 		}
@@ -153,12 +153,12 @@ func (r *HybridDAGRepository) List(ctx context.Context) ([]uuid.UUID, error) {
 }
 
 // Get retrieves a DAG from memory (fast operation)
-func (r *HybridDAGRepository) Get(ctx context.Context, id uuid.UUID) (*dag.DAG, error) {
+func (r *HybridDAGRepository) Get(ctx context.Context, id uuid.UUID) (*model.DAG, error) {
 	return r.memoryRepo.Get(ctx, id)
 }
 
 // Create stores a DAG in memory and optionally persists to file
-func (r *HybridDAGRepository) Create(ctx context.Context, dagObj *dag.DAG) error {
+func (r *HybridDAGRepository) Create(ctx context.Context, dagObj *model.DAG) error {
 	// Store in memory first
 	err := r.memoryRepo.Create(ctx, dagObj)
 	if err != nil {
@@ -193,7 +193,7 @@ func (r *HybridDAGRepository) Create(ctx context.Context, dagObj *dag.DAG) error
 }
 
 // Update modifies a DAG in memory and optionally persists to file
-func (r *HybridDAGRepository) Update(ctx context.Context, id uuid.UUID, fnUpdate func(dag dag.DAG) (dag.DAG, error)) error {
+func (r *HybridDAGRepository) Update(ctx context.Context, id uuid.UUID, fnUpdate func(dag model.DAG) (model.DAG, error)) error {
 	// Update in memory first
 	err := r.memoryRepo.Update(ctx, id, fnUpdate)
 	if err != nil {

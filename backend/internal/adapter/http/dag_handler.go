@@ -2,7 +2,7 @@ package http
 
 import (
 	"context"
-	"davidterranova/jurigen/backend/internal/dag"
+	"davidterranova/jurigen/backend/internal/model"
 	"davidterranova/jurigen/backend/internal/usecase"
 	"davidterranova/jurigen/backend/pkg/xhttp"
 	"encoding/json"
@@ -17,9 +17,9 @@ import (
 //go:generate go run github.com/golang/mock/mockgen -source=dag_handler.go -destination=testdata/mocks/app_mock.go -package=mocks
 
 type App interface {
-	Get(ctx context.Context, cmd usecase.CmdGetDAG) (*dag.DAG, error)
+	Get(ctx context.Context, cmd usecase.CmdGetDAG) (*model.DAG, error)
 	List(ctx context.Context, cmd usecase.CmdListDAGs) ([]uuid.UUID, error)
-	Update(ctx context.Context, cmd usecase.CmdUpdateDAG) (*dag.DAG, error)
+	Update(ctx context.Context, cmd usecase.CmdUpdateDAG) (*model.DAG, error)
 }
 
 type dagHandler struct {

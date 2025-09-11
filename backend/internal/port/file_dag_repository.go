@@ -2,7 +2,7 @@ package port
 
 import (
 	"context"
-	"davidterranova/jurigen/backend/internal/dag"
+	"davidterranova/jurigen/backend/internal/model"
 	"davidterranova/jurigen/backend/internal/usecase"
 	"fmt"
 	"os"
@@ -24,7 +24,7 @@ func NewFileDAGRepository(filePath string) *FileDAGRepository {
 	}
 }
 
-func (r *FileDAGRepository) Get(ctx context.Context, id uuid.UUID) (*dag.DAG, error) {
+func (r *FileDAGRepository) Get(ctx context.Context, id uuid.UUID) (*model.DAG, error) {
 	dagFile := filepath.Join(r.filePath, id.String()+dagFileExtension)
 	data, err := os.ReadFile(dagFile)
 	if err != nil {
@@ -35,7 +35,7 @@ func (r *FileDAGRepository) Get(ctx context.Context, id uuid.UUID) (*dag.DAG, er
 		)
 	}
 
-	var dag = dag.NewDAG("Untitled DAG")
+	var dag = model.NewDAG("Untitled DAG")
 	err = dag.UnmarshalJSON(data)
 	if err != nil {
 		return nil, fmt.Errorf(
@@ -82,7 +82,7 @@ func (r *FileDAGRepository) List(ctx context.Context) ([]uuid.UUID, error) {
 }
 
 // Create stores a new DAG to a file
-func (r *FileDAGRepository) Create(ctx context.Context, dagObj *dag.DAG) error {
+func (r *FileDAGRepository) Create(ctx context.Context, dagObj *model.DAG) error {
 	if dagObj == nil {
 		return fmt.Errorf("%w: DAG cannot be nil", usecase.ErrInvalidCommand)
 	}
@@ -115,7 +115,7 @@ func (r *FileDAGRepository) Create(ctx context.Context, dagObj *dag.DAG) error {
 }
 
 // Update modifies an existing DAG file using the provided function
-func (r *FileDAGRepository) Update(ctx context.Context, id uuid.UUID, fnUpdate func(dag dag.DAG) (dag.DAG, error)) error {
+func (r *FileDAGRepository) Update(ctx context.Context, id uuid.UUID, fnUpdate func(dag model.DAG) (model.DAG, error)) error {
 	// First, get the existing DAG
 	existingDAG, err := r.Get(ctx, id)
 	if err != nil {

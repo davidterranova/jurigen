@@ -2,7 +2,7 @@ package port
 
 import (
 	"context"
-	"davidterranova/jurigen/backend/internal/dag"
+	"davidterranova/jurigen/backend/internal/model"
 	"davidterranova/jurigen/backend/internal/usecase"
 	"fmt"
 	"testing"
@@ -23,21 +23,21 @@ func TestNewInMemoryDAGRepository(t *testing.T) {
 func TestInMemoryDAGRepository_CreateAndGet(t *testing.T) {
 	tests := []struct {
 		name    string
-		setup   func() (*InMemoryDAGRepository, *dag.DAG)
+		setup   func() (*InMemoryDAGRepository, *model.DAG)
 		wantErr bool
 	}{
 		{
 			name: "successfully create and retrieve DAG",
-			setup: func() (*InMemoryDAGRepository, *dag.DAG) {
+			setup: func() (*InMemoryDAGRepository, *model.DAG) {
 				repo := NewInMemoryDAGRepository()
-				testDAG := dag.NewDAG("Test DAG")
+				testDAG := model.NewDAG("Test DAG")
 				return repo, testDAG
 			},
 			wantErr: false,
 		},
 		{
 			name: "create nil DAG should fail",
-			setup: func() (*InMemoryDAGRepository, *dag.DAG) {
+			setup: func() (*InMemoryDAGRepository, *model.DAG) {
 				repo := NewInMemoryDAGRepository()
 				return repo, nil
 			},
@@ -89,7 +89,7 @@ func TestInMemoryDAGRepository_Get_NotFound(t *testing.T) {
 func TestInMemoryDAGRepository_Delete(t *testing.T) {
 	repo := NewInMemoryDAGRepository()
 	ctx := context.Background()
-	testDAG := dag.NewDAG("Test DAG")
+	testDAG := model.NewDAG("Test DAG")
 
 	// Create a DAG first
 	err := repo.Create(ctx, testDAG)
@@ -129,8 +129,8 @@ func TestInMemoryDAGRepository_List(t *testing.T) {
 	assert.Len(t, ids, 0)
 
 	// Add some DAGs
-	dag1 := dag.NewDAG("Test DAG")
-	dag2 := dag.NewDAG("Test DAG")
+	dag1 := model.NewDAG("Test DAG")
+	dag2 := model.NewDAG("Test DAG")
 
 	err = repo.Create(ctx, dag1)
 	require.NoError(t, err)
@@ -148,19 +148,19 @@ func TestInMemoryDAGRepository_List(t *testing.T) {
 func TestInMemoryDAGRepository_Update(t *testing.T) {
 	repo := NewInMemoryDAGRepository()
 	ctx := context.Background()
-	testDAG := dag.NewDAG("Test DAG")
+	testDAG := model.NewDAG("Test DAG")
 
 	// Create a DAG first
 	err := repo.Create(ctx, testDAG)
 	require.NoError(t, err)
 
 	// Update function that modifies the DAG
-	updateFn := func(d dag.DAG) (dag.DAG, error) {
+	updateFn := func(d model.DAG) (model.DAG, error) {
 		// Add a test node to the DAG
-		testNode := dag.Node{
+		testNode := model.Node{
 			Id:       uuid.New(),
 			Question: "Updated question",
-			Answers:  []dag.Answer{},
+			Answers:  []model.Answer{},
 		}
 		d.Nodes[testNode.Id] = testNode
 		return d, nil
@@ -191,7 +191,7 @@ func TestInMemoryDAGRepository_Update_NotFound(t *testing.T) {
 	ctx := context.Background()
 	nonExistentId := uuid.New()
 
-	updateFn := func(d dag.DAG) (dag.DAG, error) {
+	updateFn := func(d model.DAG) (model.DAG, error) {
 		return d, nil
 	}
 
@@ -203,15 +203,15 @@ func TestInMemoryDAGRepository_Update_NotFound(t *testing.T) {
 func TestInMemoryDAGRepository_Update_FunctionFails(t *testing.T) {
 	repo := NewInMemoryDAGRepository()
 	ctx := context.Background()
-	testDAG := dag.NewDAG("Test DAG")
+	testDAG := model.NewDAG("Test DAG")
 
 	// Create a DAG
 	err := repo.Create(ctx, testDAG)
 	require.NoError(t, err)
 
 	// Update function that returns an error
-	updateFn := func(d dag.DAG) (dag.DAG, error) {
-		return dag.DAG{}, fmt.Errorf("update function error")
+	updateFn := func(d model.DAG) (model.DAG, error) {
+		return model.DAG{}, fmt.Errorf("update function error")
 	}
 
 	err = repo.Update(ctx, testDAG.Id, updateFn)
@@ -222,14 +222,14 @@ func TestInMemoryDAGRepository_Update_FunctionFails(t *testing.T) {
 func TestInMemoryDAGRepository_Update_IDChange(t *testing.T) {
 	repo := NewInMemoryDAGRepository()
 	ctx := context.Background()
-	testDAG := dag.NewDAG("Test DAG")
+	testDAG := model.NewDAG("Test DAG")
 
 	// Create a DAG
 	err := repo.Create(ctx, testDAG)
 	require.NoError(t, err)
 
 	// Update function that tries to change the ID
-	updateFn := func(d dag.DAG) (dag.DAG, error) {
+	updateFn := func(d model.DAG) (model.DAG, error) {
 		d.Id = uuid.New() // This should cause an error
 		return d, nil
 	}
@@ -251,7 +251,7 @@ func TestInMemoryDAGRepository_ConcurrentAccess(t *testing.T) {
 	for i := 0; i < numGoroutines; i++ {
 		go func() {
 			for j := 0; j < numDAGsPerGoroutine; j++ {
-				testDAG := dag.NewDAG("Test DAG")
+				testDAG := model.NewDAG("Test DAG")
 				err := repo.Create(ctx, testDAG)
 				assert.NoError(t, err)
 

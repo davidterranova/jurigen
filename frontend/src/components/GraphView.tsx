@@ -214,7 +214,7 @@ export const GraphView = forwardRef<GraphViewRef, GraphViewProps>(
         // Fallback: find node with no incoming edges
         const hasIncomingEdge = new Set<string>();
         nodeIds.forEach(nodeId => {
-          dag.nodes[nodeId].answers.forEach(answer => {
+          model.Nodes[nodeId].answers.forEach(answer => {
             if (answer.next_node) {
               hasIncomingEdge.add(answer.next_node);
             }
@@ -290,7 +290,7 @@ export const GraphView = forwardRef<GraphViewRef, GraphViewProps>(
         levels[nodeId] = level;
 
         // Add children to queue
-        const node = dag.nodes[nodeId];
+        const node = model.Nodes[nodeId];
         if (node && node.answers) {
           node.answers.forEach(answer => {
             if (answer.next_node && !visited.has(answer.next_node)) {
@@ -321,7 +321,7 @@ export const GraphView = forwardRef<GraphViewRef, GraphViewProps>(
           if (nodeId === rootId) return; // Don't move root
 
           const currentLevel = levels[nodeId];
-          const node = dag.nodes[nodeId];
+          const node = model.Nodes[nodeId];
           
           // Calculate constraints from predecessors and successors
           let minLevel = 0;
@@ -329,7 +329,7 @@ export const GraphView = forwardRef<GraphViewRef, GraphViewProps>(
           
           // Minimum level based on predecessors
           nodeIds.forEach(predId => {
-            const predNode = dag.nodes[predId];
+            const predNode = model.Nodes[predId];
             predNode.answers.forEach(answer => {
               if (answer.next_node === nodeId) {
                 minLevel = Math.max(minLevel, levels[predId] + 1);
@@ -375,11 +375,11 @@ export const GraphView = forwardRef<GraphViewRef, GraphViewProps>(
     // Calculate a score for a node at a given level (lower is better)
     const calculateNodeScore = useCallback((nodeId: string, level: number, dag: DAG, levels: Record<string, number>): number => {
       let score = 0;
-      const node = dag.nodes[nodeId];
+      const node = model.Nodes[nodeId];
       
       // Penalize long edges (edge length contributes to score)
       Object.keys(dag.nodes).forEach(predId => {
-        const predNode = dag.nodes[predId];
+        const predNode = model.Nodes[predId];
         predNode.answers.forEach(answer => {
           if (answer.next_node === nodeId) {
             const edgeLength = Math.abs(level - levels[predId]);
@@ -411,7 +411,7 @@ export const GraphView = forwardRef<GraphViewRef, GraphViewProps>(
 
         // Calculate position based on predecessors
         previousLayer.forEach((prevNodeId, prevIndex) => {
-          const prevNode = dag.nodes[prevNodeId];
+          const prevNode = model.Nodes[prevNodeId];
           if (prevNode && prevNode.answers) {
             prevNode.answers.forEach(answer => {
               if (answer.next_node === nodeId) {
@@ -423,7 +423,7 @@ export const GraphView = forwardRef<GraphViewRef, GraphViewProps>(
         });
 
         // Consider successors for better positioning
-        const node = dag.nodes[nodeId];
+        const node = model.Nodes[nodeId];
         let successorInfluence = 0;
         let successorCount = 0;
         
@@ -482,7 +482,7 @@ export const GraphView = forwardRef<GraphViewRef, GraphViewProps>(
 
       // Group terminals by their Y-level (based on source node Y position)
       Object.keys(dag.nodes).forEach((nodeId) => {
-        const dagNode = dag.nodes[nodeId];
+        const dagNode = model.Nodes[nodeId];
         const sourcePosition = nodePositions[nodeId] || { x: 0, y: 0 };
         const terminalAnswers = dagNode.answers.filter(a => !a.next_node);
 
@@ -580,7 +580,7 @@ export const GraphView = forwardRef<GraphViewRef, GraphViewProps>(
 
       // Convert nodes
       Object.keys(dag.nodes).forEach((nodeId) => {
-        const dagNode = dag.nodes[nodeId];
+        const dagNode = model.Nodes[nodeId];
         // Use custom position if in manual mode and position exists, otherwise use calculated position
         const position = (layoutMode === 'manual' && customPositions[nodeId]) 
           ? customPositions[nodeId] 
@@ -609,7 +609,7 @@ export const GraphView = forwardRef<GraphViewRef, GraphViewProps>(
 
       // Convert edges (answers become edges) and create terminal nodes
       Object.keys(dag.nodes).forEach((nodeId) => {
-        const dagNode = dag.nodes[nodeId];
+        const dagNode = model.Nodes[nodeId];
         console.log(`🔍 Processing node ${nodeId} with ${dagNode.answers.length} answers`);
         
         dagNode.answers.forEach((answer: Answer) => {

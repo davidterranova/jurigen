@@ -1,7 +1,7 @@
 package usecase
 
 import (
-	"davidterranova/jurigen/backend/internal/dag"
+	"davidterranova/jurigen/backend/internal/model"
 	"fmt"
 	"testing"
 
@@ -21,7 +21,7 @@ func TestDAGValidator_ValidateDAG(t *testing.T) {
 
 	tests := []struct {
 		name               string
-		dag                *dag.DAG
+		dag                *model.DAG
 		expectValid        bool
 		expectedErrorCodes []string
 		expectedStats      ValidationStatistics
@@ -48,30 +48,30 @@ func TestDAGValidator_ValidateDAG(t *testing.T) {
 		},
 		{
 			name: "DAG with empty ID",
-			dag: &dag.DAG{
+			dag: &model.DAG{
 				Id:    uuid.Nil,
 				Title: "Test DAG",
-				Nodes: map[uuid.UUID]dag.Node{},
+				Nodes: map[uuid.UUID]model.Node{},
 			},
 			expectValid:        false,
 			expectedErrorCodes: []string{"DAG_INVALID_ID", "DAG_NO_NODES"},
 		},
 		{
 			name: "DAG with empty title",
-			dag: &dag.DAG{
+			dag: &model.DAG{
 				Id:    uuid.New(),
 				Title: "",
-				Nodes: map[uuid.UUID]dag.Node{},
+				Nodes: map[uuid.UUID]model.Node{},
 			},
 			expectValid:        false,
 			expectedErrorCodes: []string{"DAG_EMPTY_TITLE", "DAG_NO_NODES"},
 		},
 		{
 			name: "DAG with no nodes",
-			dag: &dag.DAG{
+			dag: &model.DAG{
 				Id:    uuid.New(),
 				Title: "Test DAG",
-				Nodes: map[uuid.UUID]dag.Node{},
+				Nodes: map[uuid.UUID]model.Node{},
 			},
 			expectValid:        false,
 			expectedErrorCodes: []string{"DAG_NO_NODES"},
@@ -161,7 +161,7 @@ func TestDAGValidator_CycleDetection(t *testing.T) {
 
 	tests := []struct {
 		name          string
-		dag           *dag.DAG
+		dag           *model.DAG
 		expectCycles  bool
 		expectedPaths int
 	}{
@@ -216,7 +216,7 @@ func TestDAGValidator_DepthCalculation(t *testing.T) {
 
 	tests := []struct {
 		name          string
-		dag           *dag.DAG
+		dag           *model.DAG
 		expectedDepth int
 	}{
 		{
@@ -252,7 +252,7 @@ func TestDAGValidator_DepthCalculation(t *testing.T) {
 
 // Helper functions to create test DAGs
 
-func createValidSingleRootDAG() *dag.DAG {
+func createValidSingleRootDAG() *model.DAG {
 	rootID := uuid.New()
 	middleID := uuid.New()
 	leafID := uuid.New()
@@ -262,14 +262,14 @@ func createValidSingleRootDAG() *dag.DAG {
 	answer3ID := uuid.New()
 	answer4ID := uuid.New()
 
-	return &dag.DAG{
+	return &model.DAG{
 		Id:    uuid.New(),
 		Title: "Valid Single Root DAG",
-		Nodes: map[uuid.UUID]dag.Node{
+		Nodes: map[uuid.UUID]model.Node{
 			rootID: {
 				Id:       rootID,
 				Question: "Root question?",
-				Answers: []dag.Answer{
+				Answers: []model.Answer{
 					{
 						Id:        answer1ID,
 						Statement: "Go to middle",
@@ -285,7 +285,7 @@ func createValidSingleRootDAG() *dag.DAG {
 			middleID: {
 				Id:       middleID,
 				Question: "Middle question?",
-				Answers: []dag.Answer{
+				Answers: []model.Answer{
 					{
 						Id:        answer3ID,
 						Statement: "Go to leaf",
@@ -301,25 +301,25 @@ func createValidSingleRootDAG() *dag.DAG {
 			leafID: {
 				Id:       leafID,
 				Question: "Leaf question?",
-				Answers:  []dag.Answer{}, // Leaf node
+				Answers:  []model.Answer{}, // Leaf node
 			},
 		},
 	}
 }
 
-func createMultipleRootDAG() *dag.DAG {
+func createMultipleRootDAG() *model.DAG {
 	root1ID := uuid.New()
 	root2ID := uuid.New()
 	leafID := uuid.New()
 
-	return &dag.DAG{
+	return &model.DAG{
 		Id:    uuid.New(),
 		Title: "Multiple Root DAG",
-		Nodes: map[uuid.UUID]dag.Node{
+		Nodes: map[uuid.UUID]model.Node{
 			root1ID: {
 				Id:       root1ID,
 				Question: "Root 1 question?",
-				Answers: []dag.Answer{
+				Answers: []model.Answer{
 					{
 						Id:        uuid.New(),
 						Statement: "Go to leaf",
@@ -330,7 +330,7 @@ func createMultipleRootDAG() *dag.DAG {
 			root2ID: {
 				Id:       root2ID,
 				Question: "Root 2 question?",
-				Answers: []dag.Answer{
+				Answers: []model.Answer{
 					{
 						Id:        uuid.New(),
 						Statement: "Go to leaf",
@@ -341,25 +341,25 @@ func createMultipleRootDAG() *dag.DAG {
 			leafID: {
 				Id:       leafID,
 				Question: "Leaf question?",
-				Answers:  []dag.Answer{},
+				Answers:  []model.Answer{},
 			},
 		},
 	}
 }
 
-func createCyclicDAG() *dag.DAG {
+func createCyclicDAG() *model.DAG {
 	node1ID := uuid.New()
 	node2ID := uuid.New()
 	node3ID := uuid.New()
 
-	return &dag.DAG{
+	return &model.DAG{
 		Id:    uuid.New(),
 		Title: "Cyclic DAG",
-		Nodes: map[uuid.UUID]dag.Node{
+		Nodes: map[uuid.UUID]model.Node{
 			node1ID: {
 				Id:       node1ID,
 				Question: "Node 1 question?",
-				Answers: []dag.Answer{
+				Answers: []model.Answer{
 					{
 						Id:        uuid.New(),
 						Statement: "Go to node 2",
@@ -370,7 +370,7 @@ func createCyclicDAG() *dag.DAG {
 			node2ID: {
 				Id:       node2ID,
 				Question: "Node 2 question?",
-				Answers: []dag.Answer{
+				Answers: []model.Answer{
 					{
 						Id:        uuid.New(),
 						Statement: "Go to node 3",
@@ -381,7 +381,7 @@ func createCyclicDAG() *dag.DAG {
 			node3ID: {
 				Id:       node3ID,
 				Question: "Node 3 question?",
-				Answers: []dag.Answer{
+				Answers: []model.Answer{
 					{
 						Id:        uuid.New(),
 						Statement: "Go back to node 1", // Creates cycle
@@ -393,18 +393,18 @@ func createCyclicDAG() *dag.DAG {
 	}
 }
 
-func createNoRootDAG() *dag.DAG {
+func createNoRootDAG() *model.DAG {
 	node1ID := uuid.New()
 	node2ID := uuid.New()
 
-	return &dag.DAG{
+	return &model.DAG{
 		Id:    uuid.New(),
 		Title: "No Root DAG",
-		Nodes: map[uuid.UUID]dag.Node{
+		Nodes: map[uuid.UUID]model.Node{
 			node1ID: {
 				Id:       node1ID,
 				Question: "Node 1 question?",
-				Answers: []dag.Answer{
+				Answers: []model.Answer{
 					{
 						Id:        uuid.New(),
 						Statement: "Go to node 2",
@@ -415,7 +415,7 @@ func createNoRootDAG() *dag.DAG {
 			node2ID: {
 				Id:       node2ID,
 				Question: "Node 2 question?",
-				Answers: []dag.Answer{
+				Answers: []model.Answer{
 					{
 						Id:        uuid.New(),
 						Statement: "Go back to node 1",
@@ -427,35 +427,35 @@ func createNoRootDAG() *dag.DAG {
 	}
 }
 
-func createInvalidNodeStructureDAG() *dag.DAG {
+func createInvalidNodeStructureDAG() *model.DAG {
 	nodeID := uuid.New()
 	wrongID := uuid.New()
 
-	return &dag.DAG{
+	return &model.DAG{
 		Id:    uuid.New(),
 		Title: "Invalid Node Structure DAG",
-		Nodes: map[uuid.UUID]dag.Node{
+		Nodes: map[uuid.UUID]model.Node{
 			nodeID: {
 				Id:       wrongID, // Mismatch between map key and node ID
 				Question: "",      // Empty question
-				Answers:  []dag.Answer{},
+				Answers:  []model.Answer{},
 			},
 		},
 	}
 }
 
-func createInvalidAnswersDAG() *dag.DAG {
+func createInvalidAnswersDAG() *model.DAG {
 	nodeID := uuid.New()
 	nonExistentID := uuid.New()
 
-	return &dag.DAG{
+	return &model.DAG{
 		Id:    uuid.New(),
 		Title: "Invalid Answers DAG",
-		Nodes: map[uuid.UUID]dag.Node{
+		Nodes: map[uuid.UUID]model.Node{
 			nodeID: {
 				Id:       nodeID,
 				Question: "Test question?",
-				Answers: []dag.Answer{
+				Answers: []model.Answer{
 					{
 						Id:        uuid.New(),
 						Statement: "", // Empty statement
@@ -472,18 +472,18 @@ func createInvalidAnswersDAG() *dag.DAG {
 	}
 }
 
-func createSimpleCyclicDAG() *dag.DAG {
+func createSimpleCyclicDAG() *model.DAG {
 	node1ID := uuid.New()
 	node2ID := uuid.New()
 
-	return &dag.DAG{
+	return &model.DAG{
 		Id:    uuid.New(),
 		Title: "Simple Cyclic DAG",
-		Nodes: map[uuid.UUID]dag.Node{
+		Nodes: map[uuid.UUID]model.Node{
 			node1ID: {
 				Id:       node1ID,
 				Question: "Node 1 question?",
-				Answers: []dag.Answer{
+				Answers: []model.Answer{
 					{
 						Id:        uuid.New(),
 						Statement: "Go to node 2",
@@ -494,7 +494,7 @@ func createSimpleCyclicDAG() *dag.DAG {
 			node2ID: {
 				Id:       node2ID,
 				Question: "Node 2 question?",
-				Answers: []dag.Answer{
+				Answers: []model.Answer{
 					{
 						Id:        uuid.New(),
 						Statement: "Go back to node 1",
@@ -506,20 +506,20 @@ func createSimpleCyclicDAG() *dag.DAG {
 	}
 }
 
-func createMultipleCyclesDAG() *dag.DAG {
+func createMultipleCyclesDAG() *model.DAG {
 	node1ID := uuid.New()
 	node2ID := uuid.New()
 	node3ID := uuid.New()
 	node4ID := uuid.New()
 
-	return &dag.DAG{
+	return &model.DAG{
 		Id:    uuid.New(),
 		Title: "Multiple Cycles DAG",
-		Nodes: map[uuid.UUID]dag.Node{
+		Nodes: map[uuid.UUID]model.Node{
 			node1ID: {
 				Id:       node1ID,
 				Question: "Node 1 question?",
-				Answers: []dag.Answer{
+				Answers: []model.Answer{
 					{
 						Id:        uuid.New(),
 						Statement: "Go to node 2",
@@ -535,7 +535,7 @@ func createMultipleCyclesDAG() *dag.DAG {
 			node2ID: {
 				Id:       node2ID,
 				Question: "Node 2 question?",
-				Answers: []dag.Answer{
+				Answers: []model.Answer{
 					{
 						Id:        uuid.New(),
 						Statement: "Go back to node 1", // Cycle 1
@@ -546,7 +546,7 @@ func createMultipleCyclesDAG() *dag.DAG {
 			node3ID: {
 				Id:       node3ID,
 				Question: "Node 3 question?",
-				Answers: []dag.Answer{
+				Answers: []model.Answer{
 					{
 						Id:        uuid.New(),
 						Statement: "Go to node 4",
@@ -557,7 +557,7 @@ func createMultipleCyclesDAG() *dag.DAG {
 			node4ID: {
 				Id:       node4ID,
 				Question: "Node 4 question?",
-				Answers: []dag.Answer{
+				Answers: []model.Answer{
 					{
 						Id:        uuid.New(),
 						Statement: "Go back to node 3", // Cycle 2
@@ -569,28 +569,28 @@ func createMultipleCyclesDAG() *dag.DAG {
 	}
 }
 
-func createSingleNodeDAG() *dag.DAG {
+func createSingleNodeDAG() *model.DAG {
 	nodeID := uuid.New()
 
-	return &dag.DAG{
+	return &model.DAG{
 		Id:    uuid.New(),
 		Title: "Single Node DAG",
-		Nodes: map[uuid.UUID]dag.Node{
+		Nodes: map[uuid.UUID]model.Node{
 			nodeID: {
 				Id:       nodeID,
 				Question: "Only question?",
-				Answers:  []dag.Answer{},
+				Answers:  []model.Answer{},
 			},
 		},
 	}
 }
 
-func createLinearChainDAG(length int) *dag.DAG {
+func createLinearChainDAG(length int) *model.DAG {
 	if length <= 0 {
 		return createSingleNodeDAG()
 	}
 
-	nodes := make(map[uuid.UUID]dag.Node)
+	nodes := make(map[uuid.UUID]model.Node)
 	nodeIDs := make([]uuid.UUID, length)
 
 	// Create node IDs
@@ -600,24 +600,24 @@ func createLinearChainDAG(length int) *dag.DAG {
 
 	// Create nodes with linear chain structure
 	for i, nodeID := range nodeIDs {
-		answers := []dag.Answer{}
+		answers := []model.Answer{}
 		if i < length-1 {
 			// Not the last node, create answer pointing to next node
-			answers = append(answers, dag.Answer{
+			answers = append(answers, model.Answer{
 				Id:        uuid.New(),
 				Statement: fmt.Sprintf("Go to node %d", i+2),
 				NextNode:  &nodeIDs[i+1],
 			})
 		}
 
-		nodes[nodeID] = dag.Node{
+		nodes[nodeID] = model.Node{
 			Id:       nodeID,
 			Question: fmt.Sprintf("Question %d?", i+1),
 			Answers:  answers,
 		}
 	}
 
-	return &dag.DAG{
+	return &model.DAG{
 		Id:    uuid.New(),
 		Title: fmt.Sprintf("Linear Chain DAG (length %d)", length),
 		Nodes: nodes,

@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"context"
-	"davidterranova/jurigen/backend/internal/dag"
+	"davidterranova/jurigen/backend/internal/model"
 	"davidterranova/jurigen/backend/internal/usecase/testdata/mocks"
 	"testing"
 
@@ -32,7 +32,7 @@ func TestUpdateDAGUseCase_Execute(t *testing.T) {
 		name        string
 		cmd         CmdUpdateDAG
 		setupMock   func(*mocks.MockDAGRepository)
-		expectedDAG *dag.DAG
+		expectedDAG *model.DAG
 		expectError bool
 		errorType   error
 	}{
@@ -44,7 +44,7 @@ func TestUpdateDAGUseCase_Execute(t *testing.T) {
 			},
 			setupMock: func(mockRepo *mocks.MockDAGRepository) {
 				mockRepo.EXPECT().Update(gomock.Any(), testDAG.Id, gomock.Any()).DoAndReturn(
-					func(ctx context.Context, id uuid.UUID, fnUpdate func(dag.DAG) (dag.DAG, error)) error {
+					func(ctx context.Context, id uuid.UUID, fnUpdate func(model.DAG) (model.DAG, error)) error {
 						_, err := fnUpdate(*testDAG)
 						return err
 					},
@@ -169,7 +169,7 @@ func TestUpdateDAGUseCase_ValidateDAGStructure(t *testing.T) {
 
 	tests := []struct {
 		name      string
-		dag       *dag.DAG
+		dag       *model.DAG
 		wantError bool
 		errorMsg  string
 	}{
@@ -181,46 +181,46 @@ func TestUpdateDAGUseCase_ValidateDAGStructure(t *testing.T) {
 		},
 		{
 			name: "validates empty DAG ID",
-			dag: &dag.DAG{
+			dag: &model.DAG{
 				Id:    uuid.Nil,
 				Title: "Valid Title",
-				Nodes: map[uuid.UUID]dag.Node{},
+				Nodes: map[uuid.UUID]model.Node{},
 			},
 			wantError: true,
 			errorMsg:  "DAG ID cannot be empty",
 		},
 		{
 			name: "validates empty title",
-			dag: &dag.DAG{
+			dag: &model.DAG{
 				Id:    uuid.New(),
 				Title: "",
-				Nodes: map[uuid.UUID]dag.Node{},
+				Nodes: map[uuid.UUID]model.Node{},
 			},
 			wantError: true,
 			errorMsg:  "DAG title cannot be empty",
 		},
 		{
 			name: "validates empty nodes",
-			dag: &dag.DAG{
+			dag: &model.DAG{
 				Id:    uuid.New(),
 				Title: "Valid Title",
-				Nodes: map[uuid.UUID]dag.Node{},
+				Nodes: map[uuid.UUID]model.Node{},
 			},
 			wantError: true,
 			errorMsg:  "DAG must contain at least one node",
 		},
 		{
 			name: "validates node ID mismatch",
-			dag: func() *dag.DAG {
+			dag: func() *model.DAG {
 				nodeId := uuid.New()
-				return &dag.DAG{
+				return &model.DAG{
 					Id:    uuid.New(),
 					Title: "Valid Title",
-					Nodes: map[uuid.UUID]dag.Node{
+					Nodes: map[uuid.UUID]model.Node{
 						nodeId: {
 							Id:       uuid.New(), // Different ID
 							Question: "Test question?",
-							Answers:  []dag.Answer{},
+							Answers:  []model.Answer{},
 						},
 					},
 				}
@@ -230,16 +230,16 @@ func TestUpdateDAGUseCase_ValidateDAGStructure(t *testing.T) {
 		},
 		{
 			name: "validates empty question",
-			dag: func() *dag.DAG {
+			dag: func() *model.DAG {
 				nodeId := uuid.New()
-				return &dag.DAG{
+				return &model.DAG{
 					Id:    uuid.New(),
 					Title: "Valid Title",
-					Nodes: map[uuid.UUID]dag.Node{
+					Nodes: map[uuid.UUID]model.Node{
 						nodeId: {
 							Id:       nodeId,
 							Question: "", // Empty question
-							Answers:  []dag.Answer{},
+							Answers:  []model.Answer{},
 						},
 					},
 				}
@@ -249,17 +249,17 @@ func TestUpdateDAGUseCase_ValidateDAGStructure(t *testing.T) {
 		},
 		{
 			name: "validates answer with empty statement",
-			dag: func() *dag.DAG {
+			dag: func() *model.DAG {
 				nodeId := uuid.New()
 				answerId := uuid.New()
-				return &dag.DAG{
+				return &model.DAG{
 					Id:    uuid.New(),
 					Title: "Valid Title",
-					Nodes: map[uuid.UUID]dag.Node{
+					Nodes: map[uuid.UUID]model.Node{
 						nodeId: {
 							Id:       nodeId,
 							Question: "Test question?",
-							Answers: []dag.Answer{
+							Answers: []model.Answer{
 								{
 									Id:        answerId,
 									Statement: "", // Empty statement
@@ -274,18 +274,18 @@ func TestUpdateDAGUseCase_ValidateDAGStructure(t *testing.T) {
 		},
 		{
 			name: "validates reference to non-existent next node",
-			dag: func() *dag.DAG {
+			dag: func() *model.DAG {
 				nodeId := uuid.New()
 				answerId := uuid.New()
 				nonExistentNodeId := uuid.New()
-				return &dag.DAG{
+				return &model.DAG{
 					Id:    uuid.New(),
 					Title: "Valid Title",
-					Nodes: map[uuid.UUID]dag.Node{
+					Nodes: map[uuid.UUID]model.Node{
 						nodeId: {
 							Id:       nodeId,
 							Question: "Test question?",
-							Answers: []dag.Answer{
+							Answers: []model.Answer{
 								{
 									Id:        answerId,
 									Statement: "Yes",
@@ -347,21 +347,21 @@ func TestUpdateDAGUseCase_Execute_ContextPropagation(t *testing.T) {
 }
 
 // createValidTestDAG creates a valid DAG for testing purposes
-func createValidTestDAG() *dag.DAG {
+func createValidTestDAG() *model.DAG {
 	dagId := uuid.New()
 	rootNodeId := uuid.New()
 	leafNodeId := uuid.New()
 	answerId1 := uuid.New()
 	answerId2 := uuid.New()
 
-	return &dag.DAG{
+	return &model.DAG{
 		Id:    dagId,
 		Title: "Test Legal Case",
-		Nodes: map[uuid.UUID]dag.Node{
+		Nodes: map[uuid.UUID]model.Node{
 			rootNodeId: {
 				Id:       rootNodeId,
 				Question: "Are you experiencing workplace discrimination?",
-				Answers: []dag.Answer{
+				Answers: []model.Answer{
 					{
 						Id:        answerId1,
 						Statement: "Yes, I believe so",
@@ -377,7 +377,7 @@ func createValidTestDAG() *dag.DAG {
 			leafNodeId: {
 				Id:       leafNodeId,
 				Question: "What type of discrimination?",
-				Answers: []dag.Answer{
+				Answers: []model.Answer{
 					{
 						Id:        uuid.New(),
 						Statement: "Age discrimination",

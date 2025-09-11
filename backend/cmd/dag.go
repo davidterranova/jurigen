@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"davidterranova/jurigen/backend/internal/dag"
+	"davidterranova/jurigen/backend/internal/model"
 	"fmt"
 	"log"
 	"os"
@@ -32,7 +32,7 @@ var dagCmd = &cobra.Command{
 			log.Fatalf("error reading file '%s': %v", dagFile, err)
 		}
 
-		var dag = dag.NewDAG("Sample DAG")
+		var dag = model.NewDAG("Sample DAG")
 		err = dag.UnmarshalJSON(data)
 		if err != nil {
 			log.Fatalf("error unmarshalling file '%s': %v", dagFile, err)

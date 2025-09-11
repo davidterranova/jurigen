@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"context"
-	"davidterranova/jurigen/backend/internal/dag"
+	"davidterranova/jurigen/backend/internal/model"
 	"fmt"
 
 	"github.com/go-playground/validator"
@@ -10,8 +10,8 @@ import (
 )
 
 type CmdUpdateDAG struct {
-	DAGId string   `validate:"required,uuid"`
-	DAG   *dag.DAG `validate:"required"`
+	DAGId string     `validate:"required,uuid"`
+	DAG   *model.DAG `validate:"required"`
 }
 
 type UpdateDAGUseCase struct {
@@ -26,7 +26,7 @@ func NewUpdateDAGUseCase(dagRepository DAGRepository) *UpdateDAGUseCase {
 	}
 }
 
-func (u *UpdateDAGUseCase) Execute(ctx context.Context, cmd CmdUpdateDAG) (*dag.DAG, error) {
+func (u *UpdateDAGUseCase) Execute(ctx context.Context, cmd CmdUpdateDAG) (*model.DAG, error) {
 	// Validate the command
 	err := u.validator.Struct(cmd)
 	if err != nil {
@@ -40,8 +40,8 @@ func (u *UpdateDAGUseCase) Execute(ctx context.Context, cmd CmdUpdateDAG) (*dag.
 	}
 
 	// Update the DAG using repository's Update method
-	var updatedDAG *dag.DAG
-	err = u.dagRepository.Update(ctx, id, func(existingDAG dag.DAG) (dag.DAG, error) {
+	var updatedDAG *model.DAG
+	err = u.dagRepository.Update(ctx, id, func(existingDAG model.DAG) (model.DAG, error) {
 		// Validate that the DAG ID in the command matches the DAG ID in the payload
 		if cmd.DAG.Id != id {
 			return existingDAG, fmt.Errorf("%w: DAG ID mismatch - URL ID: %s, payload ID: %s", ErrInvalidCommand, id, cmd.DAG.Id)
@@ -65,7 +65,7 @@ func (u *UpdateDAGUseCase) Execute(ctx context.Context, cmd CmdUpdateDAG) (*dag.
 }
 
 // validateDAGStructure performs comprehensive structural validation on the DAG
-func (u *UpdateDAGUseCase) validateDAGStructure(d *dag.DAG) error {
+func (u *UpdateDAGUseCase) validateDAGStructure(d *model.DAG) error {
 	validator := NewDAGValidator()
 	result := validator.ValidateDAG(d)
 

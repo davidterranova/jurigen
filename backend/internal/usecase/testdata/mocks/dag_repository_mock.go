@@ -6,7 +6,7 @@ package mocks
 
 import (
 	context "context"
-	dag "davidterranova/jurigen/backend/internal/dag"
+	model "davidterranova/jurigen/backend/internal/model"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -37,7 +37,7 @@ func (m *MockDAGRepository) EXPECT() *MockDAGRepositoryMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockDAGRepository) Create(ctx context.Context, dag *dag.DAG) error {
+func (m *MockDAGRepository) Create(ctx context.Context, dag *model.DAG) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", ctx, dag)
 	ret0, _ := ret[0].(error)
@@ -65,10 +65,10 @@ func (mr *MockDAGRepositoryMockRecorder) Delete(ctx, id interface{}) *gomock.Cal
 }
 
 // Get mocks base method.
-func (m *MockDAGRepository) Get(ctx context.Context, id uuid.UUID) (*dag.DAG, error) {
+func (m *MockDAGRepository) Get(ctx context.Context, id uuid.UUID) (*model.DAG, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", ctx, id)
-	ret0, _ := ret[0].(*dag.DAG)
+	ret0, _ := ret[0].(*model.DAG)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -95,7 +95,7 @@ func (mr *MockDAGRepositoryMockRecorder) List(ctx interface{}) *gomock.Call {
 }
 
 // Update mocks base method.
-func (m *MockDAGRepository) Update(ctx context.Context, id uuid.UUID, fnUpdate func(dag.DAG) (dag.DAG, error)) error {
+func (m *MockDAGRepository) Update(ctx context.Context, id uuid.UUID, fnUpdate func(model.DAG) (model.DAG, error)) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", ctx, id, fnUpdate)
 	ret0, _ := ret[0].(error)

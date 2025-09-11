@@ -1,7 +1,7 @@
 package usecase
 
 import (
-	"davidterranova/jurigen/backend/internal/dag"
+	"davidterranova/jurigen/backend/internal/model"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -54,7 +54,7 @@ func NewDAGValidator() *DAGValidator {
 }
 
 // ValidateDAG performs comprehensive validation of a DAG structure
-func (v *DAGValidator) ValidateDAG(d *dag.DAG) ValidationResult {
+func (v *DAGValidator) ValidateDAG(d *model.DAG) ValidationResult {
 	result := ValidationResult{
 		IsValid:    true,
 		Errors:     []ValidationError{},
@@ -83,7 +83,7 @@ func (v *DAGValidator) ValidateDAG(d *dag.DAG) ValidationResult {
 }
 
 // validateBasicStructure validates basic DAG properties
-func (v *DAGValidator) validateBasicStructure(d *dag.DAG, result *ValidationResult) {
+func (v *DAGValidator) validateBasicStructure(d *model.DAG, result *ValidationResult) {
 	if d.Id == uuid.Nil {
 		result.IsValid = false
 		result.Errors = append(result.Errors, ValidationError{
@@ -113,7 +113,7 @@ func (v *DAGValidator) validateBasicStructure(d *dag.DAG, result *ValidationResu
 }
 
 // validateNodes validates individual nodes and their answers
-func (v *DAGValidator) validateNodes(d *dag.DAG, result *ValidationResult) {
+func (v *DAGValidator) validateNodes(d *model.DAG, result *ValidationResult) {
 	for nodeId, node := range d.Nodes {
 		// Validate node ID consistency
 		if nodeId != node.Id {
@@ -143,7 +143,7 @@ func (v *DAGValidator) validateNodes(d *dag.DAG, result *ValidationResult) {
 }
 
 // validateAnswers validates answers for a specific node
-func (v *DAGValidator) validateAnswers(d *dag.DAG, node dag.Node, result *ValidationResult) {
+func (v *DAGValidator) validateAnswers(d *model.DAG, node model.Node, result *ValidationResult) {
 	for i, answer := range node.Answers {
 		// Validate answer ID
 		if answer.Id == uuid.Nil {
@@ -185,7 +185,7 @@ func (v *DAGValidator) validateAnswers(d *dag.DAG, node dag.Node, result *Valida
 }
 
 // validateRootNode ensures the DAG has exactly one root node
-func (v *DAGValidator) validateRootNode(d *dag.DAG, result *ValidationResult) {
+func (v *DAGValidator) validateRootNode(d *model.DAG, result *ValidationResult) {
 	// Find all nodes that are not referenced as next_node
 	referencedNodes := make(map[uuid.UUID]bool)
 	allNodes := make(map[uuid.UUID]bool)
@@ -239,7 +239,7 @@ func (v *DAGValidator) validateRootNode(d *dag.DAG, result *ValidationResult) {
 }
 
 // validateCycles detects cycles in the DAG using DFS
-func (v *DAGValidator) validateCycles(d *dag.DAG, result *ValidationResult) {
+func (v *DAGValidator) validateCycles(d *model.DAG, result *ValidationResult) {
 	visited := make(map[uuid.UUID]bool)
 	inStack := make(map[uuid.UUID]bool)
 	cycles := []string{}
@@ -314,7 +314,7 @@ func (v *DAGValidator) validateCycles(d *dag.DAG, result *ValidationResult) {
 }
 
 // calculateStatistics computes various DAG statistics
-func (v *DAGValidator) calculateStatistics(d *dag.DAG, result *ValidationResult) {
+func (v *DAGValidator) calculateStatistics(d *model.DAG, result *ValidationResult) {
 	result.Statistics.TotalNodes = len(d.Nodes)
 
 	// Count leaf nodes and total answers
@@ -351,7 +351,7 @@ func (v *DAGValidator) calculateStatistics(d *dag.DAG, result *ValidationResult)
 }
 
 // calculateMaxDepth calculates the maximum depth of the DAG using BFS
-func (v *DAGValidator) calculateMaxDepth(d *dag.DAG, rootNodeID string) int {
+func (v *DAGValidator) calculateMaxDepth(d *model.DAG, rootNodeID string) int {
 	if rootNodeID == "" {
 		return 0
 	}
@@ -399,7 +399,7 @@ func (v *DAGValidator) calculateMaxDepth(d *dag.DAG, rootNodeID string) int {
 }
 
 // IsValidDAG performs a quick validation check (returns boolean only)
-func (v *DAGValidator) IsValidDAG(d *dag.DAG) bool {
+func (v *DAGValidator) IsValidDAG(d *model.DAG) bool {
 	result := v.ValidateDAG(d)
 	return result.IsValid
 }

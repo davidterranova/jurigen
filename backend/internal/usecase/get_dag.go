@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"context"
-	"davidterranova/jurigen/backend/internal/dag"
+	"davidterranova/jurigen/backend/internal/model"
 	"fmt"
 
 	"github.com/go-playground/validator"
@@ -25,7 +25,7 @@ func NewGetDAGUseCase(dagRepository DAGRepository) *GetDAGUseCase {
 	}
 }
 
-func (u *GetDAGUseCase) Get(ctx context.Context, cmdGetDag CmdGetDAG) (*dag.DAG, error) {
+func (u *GetDAGUseCase) Get(ctx context.Context, cmdGetDag CmdGetDAG) (*model.DAG, error) {
 	err := u.validator.Struct(cmdGetDag)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s (%v)", ErrInvalidCommand, err, cmdGetDag)

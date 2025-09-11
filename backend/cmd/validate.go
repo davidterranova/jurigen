@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"davidterranova/jurigen/backend/internal/dag"
+	"davidterranova/jurigen/backend/internal/model"
 	"davidterranova/jurigen/backend/internal/usecase"
 	"encoding/json"
 	"fmt"
@@ -61,7 +61,7 @@ func validateDAGFile(cmd *cobra.Command, args []string) error {
 	}
 
 	// Parse JSON
-	var dagData dag.DAG
+	var dagData model.DAG
 	if err := json.Unmarshal(data, &dagData); err != nil {
 		return fmt.Errorf("failed to parse JSON from %s: %w", filePath, err)
 	}

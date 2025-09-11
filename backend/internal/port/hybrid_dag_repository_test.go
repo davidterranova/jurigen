@@ -2,7 +2,7 @@ package port
 
 import (
 	"context"
-	"davidterranova/jurigen/backend/internal/dag"
+	"davidterranova/jurigen/backend/internal/model"
 	"davidterranova/jurigen/backend/internal/usecase"
 	"os"
 	"path/filepath"
@@ -170,12 +170,12 @@ func TestHybridDAGRepository_UpdateWithWriteThrough(t *testing.T) {
 
 	// Update the DAG
 	newNodeID := uuid.New()
-	err = repo.Update(ctx, testDAG.Id, func(existing dag.DAG) (dag.DAG, error) {
+	err = repo.Update(ctx, testDAG.Id, func(existing model.DAG) (model.DAG, error) {
 		// Add a new node
-		existing.Nodes[newNodeID] = dag.Node{
+		existing.Nodes[newNodeID] = model.Node{
 			Id:       newNodeID,
 			Question: "Updated question",
-			Answers:  []dag.Answer{},
+			Answers:  []model.Answer{},
 		}
 		return existing, nil
 	})
@@ -302,18 +302,18 @@ func TestHybridDAGRepository_GetStats(t *testing.T) {
 
 // Helper functions for tests
 
-func createTestDAG(_ *testing.T) *dag.DAG {
+func createTestDAG(_ *testing.T) *model.DAG {
 	dagID := uuid.New()
 	nodeID := uuid.New()
 	answerID := uuid.New()
 
-	return &dag.DAG{
+	return &model.DAG{
 		Id: dagID,
-		Nodes: map[uuid.UUID]dag.Node{
+		Nodes: map[uuid.UUID]model.Node{
 			nodeID: {
 				Id:       nodeID,
 				Question: "Test question?",
-				Answers: []dag.Answer{
+				Answers: []model.Answer{
 					{
 						Id:        answerID,
 						Statement: "Test answer",
@@ -325,8 +325,8 @@ func createTestDAG(_ *testing.T) *dag.DAG {
 	}
 }
 
-func createTestDAGs(t *testing.T, count int) []*dag.DAG {
-	dags := make([]*dag.DAG, count)
+func createTestDAGs(t *testing.T, count int) []*model.DAG {
+	dags := make([]*model.DAG, count)
 	for i := 0; i < count; i++ {
 		dags[i] = createTestDAG(t)
 	}

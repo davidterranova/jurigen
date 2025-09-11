@@ -2,7 +2,7 @@ package port
 
 import (
 	"context"
-	"davidterranova/jurigen/backend/internal/dag"
+	"davidterranova/jurigen/backend/internal/model"
 	"davidterranova/jurigen/backend/internal/usecase"
 	"fmt"
 	"sync"
@@ -12,19 +12,19 @@ import (
 
 // InMemoryDAGRepository implements the DAGRepository interface using in-memory storage
 type InMemoryDAGRepository struct {
-	dags map[uuid.UUID]*dag.DAG
+	dags map[uuid.UUID]*model.DAG
 	mu   sync.RWMutex // Protects concurrent access to the dags map
 }
 
 // NewInMemoryDAGRepository creates a new instance of InMemoryDAGRepository
 func NewInMemoryDAGRepository() *InMemoryDAGRepository {
 	return &InMemoryDAGRepository{
-		dags: make(map[uuid.UUID]*dag.DAG),
+		dags: make(map[uuid.UUID]*model.DAG),
 	}
 }
 
 // Get retrieves a DAG by its ID from memory
-func (r *InMemoryDAGRepository) Get(ctx context.Context, id uuid.UUID) (*dag.DAG, error) {
+func (r *InMemoryDAGRepository) Get(ctx context.Context, id uuid.UUID) (*model.DAG, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -41,7 +41,7 @@ func (r *InMemoryDAGRepository) Get(ctx context.Context, id uuid.UUID) (*dag.DAG
 }
 
 // Create stores a DAG in memory
-func (r *InMemoryDAGRepository) Create(ctx context.Context, dagObj *dag.DAG) error {
+func (r *InMemoryDAGRepository) Create(ctx context.Context, dagObj *model.DAG) error {
 	if dagObj == nil {
 		return fmt.Errorf("%w: DAG cannot be nil", usecase.ErrInvalidCommand)
 	}
@@ -84,7 +84,7 @@ func (r *InMemoryDAGRepository) List(ctx context.Context) ([]uuid.UUID, error) {
 }
 
 // Update modifies an existing DAG in memory using the provided function
-func (r *InMemoryDAGRepository) Update(ctx context.Context, id uuid.UUID, fnUpdate func(dag dag.DAG) (dag.DAG, error)) error {
+func (r *InMemoryDAGRepository) Update(ctx context.Context, id uuid.UUID, fnUpdate func(dag model.DAG) (model.DAG, error)) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 

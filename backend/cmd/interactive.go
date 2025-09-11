@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"davidterranova/jurigen/backend/internal/dag"
+	"davidterranova/jurigen/backend/internal/model"
 	"fmt"
 	"log"
 	"os"
@@ -35,7 +35,7 @@ var interactiveCmd = &cobra.Command{
 			log.Fatalf("error reading file '%s': %v", interactiveDagFile, err)
 		}
 
-		var d = dag.NewDAG("Interactive DAG")
+		var d = model.NewDAG("Interactive DAG")
 		err = d.UnmarshalJSON(data)
 		if err != nil {
 			log.Fatalf("error unmarshalling file '%s': %v", interactiveDagFile, err)
@@ -53,13 +53,13 @@ var interactiveCmd = &cobra.Command{
 		fmt.Println()
 
 		// Choose the appropriate answer provider based on context flag
-		var answerProvider func(dag.Node) (dag.Answer, error)
+		var answerProvider func(model.Node) (model.Answer, error)
 		if collectContext {
-			answerProvider = dag.CLIFnAnswerWithContext
+			answerProvider = model.CLIFnAnswerWithContext
 			fmt.Println("📝 Context collection enabled - you'll be prompted for additional details.")
 			fmt.Println()
 		} else {
-			answerProvider = dag.CLIFnAnswer
+			answerProvider = model.CLIFnAnswer
 		}
 
 		// Use the DAG's Walk function with the selected answer provider

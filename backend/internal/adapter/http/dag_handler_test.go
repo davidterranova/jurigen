@@ -2,7 +2,7 @@ package http
 
 import (
 	"davidterranova/jurigen/backend/internal/adapter/http/testdata/mocks"
-	"davidterranova/jurigen/backend/internal/dag"
+	"davidterranova/jurigen/backend/internal/model"
 	"davidterranova/jurigen/backend/internal/usecase"
 	"encoding/json"
 	"net/http"
@@ -110,7 +110,7 @@ func TestDAGHandler_List(t *testing.T) {
 }
 
 func TestDAGHandler_GetDAG(t *testing.T) {
-	testDAG := dag.NewDAG("Test DAG")
+	testDAG := model.NewDAG("Test DAG")
 
 	tests := []struct {
 		name           string

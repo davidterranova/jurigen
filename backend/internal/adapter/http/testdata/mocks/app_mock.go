@@ -6,7 +6,7 @@ package mocks
 
 import (
 	context "context"
-	dag "davidterranova/jurigen/backend/internal/dag"
+	model "davidterranova/jurigen/backend/internal/model"
 	usecase "davidterranova/jurigen/backend/internal/usecase"
 	reflect "reflect"
 
@@ -38,10 +38,10 @@ func (m *MockApp) EXPECT() *MockAppMockRecorder {
 }
 
 // Get mocks base method.
-func (m *MockApp) Get(ctx context.Context, cmd usecase.CmdGetDAG) (*dag.DAG, error) {
+func (m *MockApp) Get(ctx context.Context, cmd usecase.CmdGetDAG) (*model.DAG, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", ctx, cmd)
-	ret0, _ := ret[0].(*dag.DAG)
+	ret0, _ := ret[0].(*model.DAG)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -68,10 +68,10 @@ func (mr *MockAppMockRecorder) List(ctx, cmd interface{}) *gomock.Call {
 }
 
 // Update mocks base method.
-func (m *MockApp) Update(ctx context.Context, cmd usecase.CmdUpdateDAG) (*dag.DAG, error) {
+func (m *MockApp) Update(ctx context.Context, cmd usecase.CmdUpdateDAG) (*model.DAG, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", ctx, cmd)
-	ret0, _ := ret[0].(*dag.DAG)
+	ret0, _ := ret[0].(*model.DAG)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

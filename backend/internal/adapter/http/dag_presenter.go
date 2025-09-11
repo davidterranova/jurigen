@@ -1,7 +1,7 @@
 package http
 
 import (
-	"davidterranova/jurigen/backend/internal/dag"
+	"davidterranova/jurigen/backend/internal/model"
 
 	"github.com/google/uuid"
 )
@@ -16,7 +16,7 @@ type DAGPresenter struct {
 	Nodes []NodePresenter `json:"nodes" description:"Array of question nodes that make up the legal case decision tree"`
 }
 
-func NewDAGPresenter(dag *dag.DAG) DAGPresenter {
+func NewDAGPresenter(dag *model.DAG) DAGPresenter {
 	nodes := make([]NodePresenter, 0, len(dag.Nodes))
 	for _, node := range dag.Nodes {
 		nodes = append(nodes, NewNodePresenter(node))
@@ -39,7 +39,7 @@ type NodePresenter struct {
 	Answers  []AnswerPresenter `json:"answers" description:"Available answer options for this question"`
 }
 
-func NewNodePresenter(node dag.Node) NodePresenter {
+func NewNodePresenter(node model.Node) NodePresenter {
 	answers := make([]AnswerPresenter, 0, len(node.Answers))
 	for _, answer := range node.Answers {
 		answers = append(answers, NewAnswerPresenter(answer))
@@ -66,7 +66,7 @@ type AnswerPresenter struct {
 	Metadata    map[string]interface{} `json:"metadata,omitempty" description:"Structured metadata for legal assessment: confidence scores, evidence tracking, damages estimates, action items, etc."`
 }
 
-func NewAnswerPresenter(answer dag.Answer) AnswerPresenter {
+func NewAnswerPresenter(answer model.Answer) AnswerPresenter {
 	return AnswerPresenter{
 		Id:          answer.Id,
 		Statement:   answer.Statement,
@@ -93,14 +93,14 @@ func NewDAGListPresenter(dagIds []uuid.UUID) DAGListPresenter {
 }
 
 // presenterToDAG converts a DAGPresenter to a DAG struct
-func (h *dagHandler) presenterToDAG(presenter DAGPresenter) *dag.DAG {
-	nodes := make(map[uuid.UUID]dag.Node)
+func (h *dagHandler) presenterToDAG(presenter DAGPresenter) *model.DAG {
+	nodes := make(map[uuid.UUID]model.Node)
 
 	for _, nodePresenter := range presenter.Nodes {
-		answers := make([]dag.Answer, len(nodePresenter.Answers))
+		answers := make([]model.Answer, len(nodePresenter.Answers))
 
 		for i, answerPresenter := range nodePresenter.Answers {
-			answers[i] = dag.Answer{
+			answers[i] = model.Answer{
 				Id:          answerPresenter.Id,
 				Statement:   answerPresenter.Statement,
 				NextNode:    answerPresenter.NextNode,
@@ -109,7 +109,7 @@ func (h *dagHandler) presenterToDAG(presenter DAGPresenter) *dag.DAG {
 			}
 		}
 
-		node := dag.Node{
+		node := model.Node{
 			Id:       nodePresenter.Id,
 			Question: nodePresenter.Question,
 			Answers:  answers,
@@ -123,7 +123,7 @@ func (h *dagHandler) presenterToDAG(presenter DAGPresenter) *dag.DAG {
 		nodes[node.Id] = node
 	}
 
-	return &dag.DAG{
+	return &model.DAG{
 		Id:    presenter.Id,
 		Title: presenter.Title,
 		Nodes: nodes,
