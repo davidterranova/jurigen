@@ -1,5 +1,6 @@
-import axios, { AxiosInstance, AxiosResponse } from 'axios';
-import { ApiResponse, ApiError } from '../types/api';
+import axios from 'axios';
+import type { AxiosInstance, AxiosResponse } from 'axios';
+import type { ApiResponse, ApiError } from '../types/api';
 
 // Create axios instance with base configuration
 const createApiClient = (): AxiosInstance => {
