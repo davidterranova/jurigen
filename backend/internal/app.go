@@ -16,6 +16,7 @@ type dagUseCase struct {
 	GetDAGUseCase
 	ListDAGsUseCase
 	UpdateDAGUseCase
+	ValidateStoredDAGUseCase
 }
 
 type GetDAGUseCase interface {
@@ -31,12 +32,17 @@ type UpdateDAGUseCase interface {
 	Execute(ctx context.Context, cmd usecase.CmdUpdateDAG) (*model.DAG, error)
 }
 
+type ValidateStoredDAGUseCase interface {
+	Execute(ctx context.Context, cmd usecase.CmdValidateStoredDAG) (*usecase.ValidationResult, error)
+}
+
 func New(dagRepository usecase.DAGRepository) *App {
 	return &App{
 		dagUseCase: &dagUseCase{
 			usecase.NewGetDAGUseCase(dagRepository),
 			usecase.NewListDAGsUseCase(dagRepository),
 			usecase.NewUpdateDAGUseCase(dagRepository),
+			usecase.NewValidateStoredDAGUseCase(dagRepository),
 		},
 	}
 }
@@ -50,9 +56,13 @@ func (a *App) List(ctx context.Context, cmd usecase.CmdListDAGs) ([]uuid.UUID, e
 }
 
 func (a *App) Update(ctx context.Context, cmd usecase.CmdUpdateDAG) (*model.DAG, error) {
-	return a.dagUseCase.Execute(ctx, cmd)
+	return a.dagUseCase.UpdateDAGUseCase.Execute(ctx, cmd)
 }
 
 func (a *App) ListDAGs(ctx context.Context, cmd usecase.CmdListDAGs) ([]*model.DAG, error) {
 	return a.dagUseCase.ListDAGs(ctx, cmd)
+}
+
+func (a *App) ValidateStoredDAG(ctx context.Context, cmd usecase.CmdValidateStoredDAG) (*usecase.ValidationResult, error) {
+	return a.dagUseCase.ValidateStoredDAGUseCase.Execute(ctx, cmd)
 }

@@ -278,6 +278,61 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/dags/{dagId}/validate": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Validates an existing Legal Case DAG by ID, persisting validation results including status and statistics to the DAG metadata",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "DAGs"
+                ],
+                "summary": "Validate stored Legal Case DAG",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "DAG unique identifier (UUID)",
+                        "name": "dagId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "DAG validation completed successfully (may contain validation errors)",
+                        "schema": {
+                            "$ref": "#/definitions/http.ValidationResultPresenter"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid DAG ID format",
+                        "schema": {
+                            "$ref": "#/definitions/xhttp.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "DAG not found",
+                        "schema": {
+                            "$ref": "#/definitions/xhttp.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error during validation",
+                        "schema": {
+                            "$ref": "#/definitions/xhttp.ErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {

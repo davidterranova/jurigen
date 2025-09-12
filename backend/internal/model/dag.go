@@ -112,9 +112,10 @@ func (d DAG) GetRootNode() (Node, error) {
 
 // dagJSON represents the JSON structure for marshaling/unmarshaling a DAG
 type dagJSON struct {
-	Id    uuid.UUID `json:"id"`
-	Title string    `json:"title"`
-	Nodes []Node    `json:"nodes"`
+	Id       uuid.UUID    `json:"id"`
+	Title    string       `json:"title"`
+	Nodes    []Node       `json:"nodes"`
+	Metadata *DAGMetadata `json:"metadata,omitempty"`
 }
 
 func (d DAG) MarshalJSON() ([]byte, error) {
@@ -123,11 +124,12 @@ func (d DAG) MarshalJSON() ([]byte, error) {
 		nodes = append(nodes, node)
 	}
 
-	// Create a dagJSON struct to marshal both id, title and nodes
+	// Create a dagJSON struct to marshal id, title, nodes, and metadata
 	dag := dagJSON{
-		Id:    d.Id,
-		Title: d.Title,
-		Nodes: nodes,
+		Id:       d.Id,
+		Title:    d.Title,
+		Nodes:    nodes,
+		Metadata: d.Metadata,
 	}
 
 	return json.Marshal(dag)
@@ -141,9 +143,10 @@ func (d *DAG) UnmarshalJSON(data []byte) error {
 		return fmt.Errorf("error unmarshalling DAG data: %w", err)
 	}
 
-	// Set the DAG id and title from the unmarshaled data
+	// Set the DAG id, title, and metadata from the unmarshaled data
 	d.Id = dag.Id
 	d.Title = dag.Title
+	d.Metadata = dag.Metadata
 
 	// Initialize the Nodes map if it's nil
 	if d.Nodes == nil {

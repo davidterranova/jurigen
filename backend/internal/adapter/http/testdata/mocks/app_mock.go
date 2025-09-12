@@ -96,3 +96,18 @@ func (mr *MockAppMockRecorder) Update(ctx, cmd interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockApp)(nil).Update), ctx, cmd)
 }
+
+// ValidateStoredDAG mocks base method.
+func (m *MockApp) ValidateStoredDAG(ctx context.Context, cmd usecase.CmdValidateStoredDAG) (*usecase.ValidationResult, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ValidateStoredDAG", ctx, cmd)
+	ret0, _ := ret[0].(*usecase.ValidationResult)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ValidateStoredDAG indicates an expected call of ValidateStoredDAG.
+func (mr *MockAppMockRecorder) ValidateStoredDAG(ctx, cmd interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateStoredDAG", reflect.TypeOf((*MockApp)(nil).ValidateStoredDAG), ctx, cmd)
+}

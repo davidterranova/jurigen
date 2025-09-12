@@ -358,6 +358,43 @@ paths:
       summary: Get Legal Case DAG content
       tags:
       - DAGs
+  /dags/{dagId}/validate:
+    post:
+      consumes:
+      - application/json
+      description: Validates an existing Legal Case DAG by ID, persisting validation
+        results including status and statistics to the DAG metadata
+      parameters:
+      - description: DAG unique identifier (UUID)
+        in: path
+        name: dagId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: DAG validation completed successfully (may contain validation
+            errors)
+          schema:
+            $ref: '#/definitions/http.ValidationResultPresenter'
+        "400":
+          description: Invalid DAG ID format
+          schema:
+            $ref: '#/definitions/xhttp.ErrorResponse'
+        "404":
+          description: DAG not found
+          schema:
+            $ref: '#/definitions/xhttp.ErrorResponse'
+        "500":
+          description: Internal server error during validation
+          schema:
+            $ref: '#/definitions/xhttp.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Validate stored Legal Case DAG
+      tags:
+      - DAGs
   /dags/validate:
     post:
       consumes:

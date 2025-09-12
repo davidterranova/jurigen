@@ -21,6 +21,7 @@ type App interface {
 	List(ctx context.Context, cmd usecase.CmdListDAGs) ([]uuid.UUID, error)
 	ListDAGs(ctx context.Context, cmd usecase.CmdListDAGs) ([]*model.DAG, error)
 	Update(ctx context.Context, cmd usecase.CmdUpdateDAG) (*model.DAG, error)
+	ValidateStoredDAG(ctx context.Context, cmd usecase.CmdValidateStoredDAG) (*usecase.ValidationResult, error)
 }
 
 type dagHandler struct {
@@ -279,6 +280,51 @@ func (h *dagHandler) ValidateDAG(w http.ResponseWriter, r *http.Request) {
 
 	// Convert validation result to presenter format
 	resultPresenter := h.validationResultToPresenter(validationResult)
+
+	// Return validation results (always 200 OK, even if DAG is invalid)
+	xhttp.WriteObject(ctx, w, http.StatusOK, resultPresenter)
+}
+
+// ValidateStoredDAG validates an existing stored DAG and persists the validation metadata
+//
+// @Summary Validate stored Legal Case DAG
+// @Description Validates an existing Legal Case DAG by ID, persisting validation results including status and statistics to the DAG metadata
+// @Tags DAGs
+// @Accept json
+// @Produce json
+// @Param dagId path string true "DAG unique identifier (UUID)"
+// @Success 200 {object} ValidationResultPresenter "DAG validation completed successfully (may contain validation errors)"
+// @Failure 400 {object} xhttp.ErrorResponse "Invalid DAG ID format"
+// @Failure 404 {object} xhttp.ErrorResponse "DAG not found"
+// @Failure 500 {object} xhttp.ErrorResponse "Internal server error during validation"
+// @Security ApiKeyAuth
+// @Router /dags/{dagId}/validate [post]
+func (h *dagHandler) ValidateStoredDAG(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	id := mux.Vars(r)[dagId]
+
+	// Validate and execute the stored DAG validation
+	validationResult, err := h.app.ValidateStoredDAG(ctx, usecase.CmdValidateStoredDAG{
+		DAGId: id,
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("failed to validate stored DAG")
+		switch {
+		case errors.Is(err, usecase.ErrInvalidCommand):
+			xhttp.WriteError(ctx, w, http.StatusBadRequest, "invalid DAG ID format", err)
+			return
+		case errors.Is(err, usecase.ErrNotFound):
+			xhttp.WriteError(ctx, w, http.StatusNotFound, "DAG not found", err)
+			return
+		default:
+			xhttp.WriteError(ctx, w, http.StatusInternalServerError, "failed to validate stored DAG", err)
+			return
+		}
+	}
+
+	// Convert validation result to presenter format
+	resultPresenter := h.validationResultToPresenter(*validationResult)
 
 	// Return validation results (always 200 OK, even if DAG is invalid)
 	xhttp.WriteObject(ctx, w, http.StatusOK, resultPresenter)
