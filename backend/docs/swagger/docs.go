@@ -29,7 +29,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Retrieve a list of all available Legal Case DAG identifiers in the system",
+                "description": "Retrieve a list of all available Legal Case DAGs with ID, title, and validation status",
                 "consumes": [
                     "application/json"
                 ],
@@ -42,9 +42,9 @@ const docTemplate = `{
                 "summary": "List Legal Case DAGs",
                 "responses": {
                     "200": {
-                        "description": "Successfully retrieved DAG list",
+                        "description": "Successfully retrieved DAG list with summary information",
                         "schema": {
-                            "$ref": "#/definitions/http.DAGListPresenter"
+                            "$ref": "#/definitions/http.DAGSummaryListPresenter"
                         }
                     },
                     "500": {
@@ -114,7 +114,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Retrieve a complete Legal Case DAG structure including all questions, answers, and collected context",
+                "description": "Retrieve DAG metadata including ID, title, validation status, and statistics (without content)",
                 "consumes": [
                     "application/json"
                 ],
@@ -124,7 +124,7 @@ const docTemplate = `{
                 "tags": [
                     "DAGs"
                 ],
-                "summary": "Get Legal Case DAG",
+                "summary": "Get Legal Case DAG metadata",
                 "parameters": [
                     {
                         "type": "string",
@@ -136,9 +136,9 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Successfully retrieved DAG",
+                        "description": "Successfully retrieved DAG metadata",
                         "schema": {
-                            "$ref": "#/definitions/http.DAGPresenter"
+                            "$ref": "#/definitions/http.DAGMetadataPresenter"
                         }
                     },
                     "400": {
@@ -223,6 +223,61 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/dags/{dagId}/content": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve complete Legal Case DAG content including ID, title, and all questions with answers",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "DAGs"
+                ],
+                "summary": "Get Legal Case DAG content",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "DAG unique identifier (UUID)",
+                        "name": "dagId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully retrieved DAG content",
+                        "schema": {
+                            "$ref": "#/definitions/http.DAGContentPresenter"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid DAG ID format",
+                        "schema": {
+                            "$ref": "#/definitions/xhttp.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "DAG not found",
+                        "schema": {
+                            "$ref": "#/definitions/xhttp.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/xhttp.ErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -252,18 +307,44 @@ const docTemplate = `{
                 }
             }
         },
-        "http.DAGListPresenter": {
-            "description": "List of Legal Case DAG identifiers available in the system",
+        "http.DAGContentPresenter": {
+            "description": "DAG content including ID, title, and all nodes with answers",
             "type": "object",
             "properties": {
-                "count": {
-                    "type": "integer"
+                "id": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
                 },
-                "dags": {
+                "nodes": {
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "$ref": "#/definitions/http.NodePresenter"
                     }
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Employment Discrimination Case"
+                }
+            }
+        },
+        "http.DAGMetadataPresenter": {
+            "description": "DAG metadata including ID, title, validation status, and statistics",
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "is_valid": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "statistics": {
+                    "$ref": "#/definitions/http.ValidationStatisticsPresenter"
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Employment Discrimination Case"
                 }
             }
         },
@@ -280,6 +361,39 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/http.NodePresenter"
                     }
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Employment Discrimination Case"
+                }
+            }
+        },
+        "http.DAGSummaryListPresenter": {
+            "description": "List of DAG summaries with essential information for efficient overview",
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "dags": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/http.DAGSummaryPresenter"
+                    }
+                }
+            }
+        },
+        "http.DAGSummaryPresenter": {
+            "description": "Summary information for a DAG including ID, title, and validation status",
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "is_valid": {
+                    "type": "boolean",
+                    "example": true
                 },
                 "title": {
                     "type": "string",

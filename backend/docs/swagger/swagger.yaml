@@ -20,15 +20,34 @@ definitions:
         example: Manager explicitly mentioned my age during termination
         type: string
     type: object
-  http.DAGListPresenter:
-    description: List of Legal Case DAG identifiers available in the system
+  http.DAGContentPresenter:
+    description: DAG content including ID, title, and all nodes with answers
     properties:
-      count:
-        type: integer
-      dags:
+      id:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      nodes:
         items:
-          type: string
+          $ref: '#/definitions/http.NodePresenter'
         type: array
+      title:
+        example: Employment Discrimination Case
+        type: string
+    type: object
+  http.DAGMetadataPresenter:
+    description: DAG metadata including ID, title, validation status, and statistics
+    properties:
+      id:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      is_valid:
+        example: true
+        type: boolean
+      statistics:
+        $ref: '#/definitions/http.ValidationStatisticsPresenter'
+      title:
+        example: Employment Discrimination Case
+        type: string
     type: object
   http.DAGPresenter:
     description: Legal Case DAG with questions, answers, and context
@@ -40,6 +59,30 @@ definitions:
         items:
           $ref: '#/definitions/http.NodePresenter'
         type: array
+      title:
+        example: Employment Discrimination Case
+        type: string
+    type: object
+  http.DAGSummaryListPresenter:
+    description: List of DAG summaries with essential information for efficient overview
+    properties:
+      count:
+        type: integer
+      dags:
+        items:
+          $ref: '#/definitions/http.DAGSummaryPresenter'
+        type: array
+    type: object
+  http.DAGSummaryPresenter:
+    description: Summary information for a DAG including ID, title, and validation
+      status
+    properties:
+      id:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      is_valid:
+        example: true
+        type: boolean
       title:
         example: Employment Discrimination Case
         type: string
@@ -184,15 +227,15 @@ paths:
     get:
       consumes:
       - application/json
-      description: Retrieve a list of all available Legal Case DAG identifiers in
-        the system
+      description: Retrieve a list of all available Legal Case DAGs with ID, title,
+        and validation status
       produces:
       - application/json
       responses:
         "200":
-          description: Successfully retrieved DAG list
+          description: Successfully retrieved DAG list with summary information
           schema:
-            $ref: '#/definitions/http.DAGListPresenter'
+            $ref: '#/definitions/http.DAGSummaryListPresenter'
         "500":
           description: Internal server error
           schema:
@@ -206,8 +249,8 @@ paths:
     get:
       consumes:
       - application/json
-      description: Retrieve a complete Legal Case DAG structure including all questions,
-        answers, and collected context
+      description: Retrieve DAG metadata including ID, title, validation status, and
+        statistics (without content)
       parameters:
       - description: DAG unique identifier (UUID)
         in: path
@@ -218,9 +261,9 @@ paths:
       - application/json
       responses:
         "200":
-          description: Successfully retrieved DAG
+          description: Successfully retrieved DAG metadata
           schema:
-            $ref: '#/definitions/http.DAGPresenter'
+            $ref: '#/definitions/http.DAGMetadataPresenter'
         "400":
           description: Invalid DAG ID format
           schema:
@@ -235,7 +278,7 @@ paths:
             $ref: '#/definitions/xhttp.ErrorResponse'
       security:
       - ApiKeyAuth: []
-      summary: Get Legal Case DAG
+      summary: Get Legal Case DAG metadata
       tags:
       - DAGs
     put:
@@ -277,6 +320,42 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Update Legal Case DAG
+      tags:
+      - DAGs
+  /dags/{dagId}/content:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve complete Legal Case DAG content including ID, title, and
+        all questions with answers
+      parameters:
+      - description: DAG unique identifier (UUID)
+        in: path
+        name: dagId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully retrieved DAG content
+          schema:
+            $ref: '#/definitions/http.DAGContentPresenter'
+        "400":
+          description: Invalid DAG ID format
+          schema:
+            $ref: '#/definitions/xhttp.ErrorResponse'
+        "404":
+          description: DAG not found
+          schema:
+            $ref: '#/definitions/xhttp.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/xhttp.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get Legal Case DAG content
       tags:
       - DAGs
   /dags/validate:

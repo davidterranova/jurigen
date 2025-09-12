@@ -86,15 +86,15 @@ func NewDAGHandler(app App) *dagHandler {
 	}
 }
 
-// Get retrieves a specific Legal Case DAG by its unique identifier
+// Get retrieves DAG metadata by its unique identifier
 //
-// @Summary Get Legal Case DAG
-// @Description Retrieve a complete Legal Case DAG structure including all questions, answers, and collected context
+// @Summary Get Legal Case DAG metadata
+// @Description Retrieve DAG metadata including ID, title, validation status, and statistics (without content)
 // @Tags DAGs
 // @Accept json
 // @Produce json
 // @Param dagId path string true "DAG unique identifier (UUID)"
-// @Success 200 {object} DAGPresenter "Successfully retrieved DAG"
+// @Success 200 {object} DAGMetadataPresenter "Successfully retrieved DAG metadata"
 // @Failure 400 {object} xhttp.ErrorResponse "Invalid DAG ID format"
 // @Failure 404 {object} xhttp.ErrorResponse "DAG not found"
 // @Failure 500 {object} xhttp.ErrorResponse "Internal server error"
@@ -109,7 +109,7 @@ func (h *dagHandler) Get(w http.ResponseWriter, r *http.Request) {
 		DAGId: id,
 	})
 	if err != nil {
-		log.Error().Err(err).Msg("failed to get DAG")
+		log.Error().Err(err).Msg("failed to get DAG metadata")
 		switch {
 		case errors.Is(err, usecase.ErrInvalidCommand):
 			xhttp.WriteError(ctx, w, http.StatusBadRequest, "invalid DAG ID format", err)
@@ -123,7 +123,47 @@ func (h *dagHandler) Get(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	xhttp.WriteObject(ctx, w, http.StatusOK, NewDAGPresenter(dag))
+	xhttp.WriteObject(ctx, w, http.StatusOK, NewDAGMetadataPresenter(dag))
+}
+
+// GetContent retrieves the complete DAG content by its unique identifier
+//
+// @Summary Get Legal Case DAG content
+// @Description Retrieve complete Legal Case DAG content including ID, title, and all questions with answers
+// @Tags DAGs
+// @Accept json
+// @Produce json
+// @Param dagId path string true "DAG unique identifier (UUID)"
+// @Success 200 {object} DAGContentPresenter "Successfully retrieved DAG content"
+// @Failure 400 {object} xhttp.ErrorResponse "Invalid DAG ID format"
+// @Failure 404 {object} xhttp.ErrorResponse "DAG not found"
+// @Failure 500 {object} xhttp.ErrorResponse "Internal server error"
+// @Security ApiKeyAuth
+// @Router /dags/{dagId}/content [get]
+func (h *dagHandler) GetContent(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	id := mux.Vars(r)[dagId]
+
+	dag, err := h.app.Get(ctx, usecase.CmdGetDAG{
+		DAGId: id,
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("failed to get DAG content")
+		switch {
+		case errors.Is(err, usecase.ErrInvalidCommand):
+			xhttp.WriteError(ctx, w, http.StatusBadRequest, "invalid DAG ID format", err)
+			return
+		case errors.Is(err, usecase.ErrNotFound):
+			xhttp.WriteError(ctx, w, http.StatusNotFound, "DAG not found", err)
+			return
+		default:
+			xhttp.WriteError(ctx, w, http.StatusInternalServerError, "failed to get DAG content", err)
+			return
+		}
+	}
+
+	xhttp.WriteObject(ctx, w, http.StatusOK, NewDAGContentPresenter(dag))
 }
 
 // List retrieves all available Legal Case DAGs with summary information

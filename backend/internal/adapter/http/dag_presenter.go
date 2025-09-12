@@ -136,6 +136,72 @@ func NewDAGSummaryListPresenter(dags []*model.DAG) DAGSummaryListPresenter {
 	}
 }
 
+// DAGMetadataPresenter represents DAG metadata information without content
+//
+// @Description DAG metadata including ID, title, validation status, and statistics
+// @Example {"id": "550e8400-e29b-41d4-a716-446655440000", "title": "Employment Law Case", "is_valid": true, "statistics": {"total_nodes": 5, "root_nodes": 1}}
+type DAGMetadataPresenter struct {
+	Id         uuid.UUID                     `json:"id" example:"550e8400-e29b-41d4-a716-446655440000" description:"Unique identifier for the Legal Case DAG"`
+	Title      string                        `json:"title" example:"Employment Discrimination Case" description:"Human-readable title describing the legal case context"`
+	IsValid    bool                          `json:"is_valid" example:"true" description:"Whether the DAG has passed validation successfully"`
+	Statistics ValidationStatisticsPresenter `json:"statistics" description:"DAG validation statistics"`
+}
+
+// DAGContentPresenter represents a DAG with only content (no metadata)
+//
+// @Description DAG content including ID, title, and all nodes with answers
+// @Example {"id": "550e8400-e29b-41d4-a716-446655440000", "title": "Employment Law", "nodes": [...]}
+type DAGContentPresenter struct {
+	Id    uuid.UUID       `json:"id" example:"550e8400-e29b-41d4-a716-446655440000" description:"Unique identifier for the Legal Case DAG"`
+	Title string          `json:"title" example:"Employment Discrimination Case" description:"Human-readable title describing the legal case context"`
+	Nodes []NodePresenter `json:"nodes" description:"Array of question nodes that make up the legal case decision tree"`
+}
+
+func NewDAGMetadataPresenter(dag *model.DAG) DAGMetadataPresenter {
+	isValid := false
+	stats := ValidationStatisticsPresenter{}
+
+	if dag.Metadata != nil {
+		isValid = dag.Metadata.IsValid
+		stats = convertValidationStatsToPresenter(dag.Metadata.Statistics)
+	}
+
+	return DAGMetadataPresenter{
+		Id:         dag.Id,
+		Title:      dag.Title,
+		IsValid:    isValid,
+		Statistics: stats,
+	}
+}
+
+func NewDAGContentPresenter(dag *model.DAG) DAGContentPresenter {
+	nodes := make([]NodePresenter, 0, len(dag.Nodes))
+	for _, node := range dag.Nodes {
+		nodes = append(nodes, NewNodePresenter(node))
+	}
+
+	return DAGContentPresenter{
+		Id:    dag.Id,
+		Title: dag.Title,
+		Nodes: nodes,
+	}
+}
+
+// Helper function to convert model.ValidationStatistics to ValidationStatisticsPresenter
+func convertValidationStatsToPresenter(stats model.ValidationStatistics) ValidationStatisticsPresenter {
+	return ValidationStatisticsPresenter{
+		TotalNodes:   stats.TotalNodes,
+		RootNodes:    stats.RootNodes,
+		LeafNodes:    stats.LeafNodes,
+		TotalAnswers: stats.TotalAnswers,
+		MaxDepth:     stats.MaxDepth,
+		HasCycles:    stats.HasCycles,
+		RootNodeIDs:  stats.RootNodeIDs,
+		LeafNodeIDs:  stats.LeafNodeIDs,
+		CyclePaths:   stats.CyclePaths,
+	}
+}
+
 // presenterToDAG converts a DAGPresenter to a DAG struct
 func (h *dagHandler) presenterToDAG(presenter DAGPresenter) *model.DAG {
 	nodes := make(map[uuid.UUID]model.Node)
