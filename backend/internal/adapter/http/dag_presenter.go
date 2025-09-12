@@ -92,6 +92,50 @@ func NewDAGListPresenter(dagIds []uuid.UUID) DAGListPresenter {
 	}
 }
 
+// DAGSummaryPresenter represents a DAG summary with essential information for list endpoints
+//
+// @Description Summary information for a DAG including ID, title, and validation status
+// @Example {"id": "550e8400-e29b-41d4-a716-446655440000", "title": "Employment Law Case", "is_valid": true}
+type DAGSummaryPresenter struct {
+	Id      uuid.UUID `json:"id" example:"550e8400-e29b-41d4-a716-446655440000" description:"Unique identifier for the Legal Case DAG"`
+	Title   string    `json:"title" example:"Employment Discrimination Case" description:"Human-readable title describing the legal case context"`
+	IsValid bool      `json:"is_valid" example:"true" description:"Whether the DAG has passed validation successfully"`
+}
+
+// DAGSummaryListPresenter represents a list of DAG summaries for API responses
+//
+// @Description List of DAG summaries with essential information for efficient overview
+// @Example {"dags": [{"id": "550e8400-e29b-41d4-a716-446655440000", "title": "Employment Law", "is_valid": true}], "count": 1}
+type DAGSummaryListPresenter struct {
+	DAGs  []DAGSummaryPresenter `json:"dags" description:"Array of DAG summaries with essential information"`
+	Count int                   `json:"count" description:"Total number of DAGs available"`
+}
+
+func NewDAGSummaryPresenter(dag *model.DAG) DAGSummaryPresenter {
+	isValid := false
+	if dag.Metadata != nil {
+		isValid = dag.Metadata.IsValid
+	}
+
+	return DAGSummaryPresenter{
+		Id:      dag.Id,
+		Title:   dag.Title,
+		IsValid: isValid,
+	}
+}
+
+func NewDAGSummaryListPresenter(dags []*model.DAG) DAGSummaryListPresenter {
+	summaries := make([]DAGSummaryPresenter, len(dags))
+	for i, dag := range dags {
+		summaries[i] = NewDAGSummaryPresenter(dag)
+	}
+
+	return DAGSummaryListPresenter{
+		DAGs:  summaries,
+		Count: len(summaries),
+	}
+}
+
 // presenterToDAG converts a DAGPresenter to a DAG struct
 func (h *dagHandler) presenterToDAG(presenter DAGPresenter) *model.DAG {
 	nodes := make(map[uuid.UUID]model.Node)

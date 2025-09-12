@@ -24,6 +24,7 @@ type GetDAGUseCase interface {
 
 type ListDAGsUseCase interface {
 	List(ctx context.Context, cmd usecase.CmdListDAGs) ([]uuid.UUID, error)
+	ListDAGs(ctx context.Context, cmd usecase.CmdListDAGs) ([]*model.DAG, error)
 }
 
 type UpdateDAGUseCase interface {
@@ -50,4 +51,8 @@ func (a *App) List(ctx context.Context, cmd usecase.CmdListDAGs) ([]uuid.UUID, e
 
 func (a *App) Update(ctx context.Context, cmd usecase.CmdUpdateDAG) (*model.DAG, error) {
 	return a.dagUseCase.Execute(ctx, cmd)
+}
+
+func (a *App) ListDAGs(ctx context.Context, cmd usecase.CmdListDAGs) ([]*model.DAG, error) {
+	return a.dagUseCase.ListDAGs(ctx, cmd)
 }

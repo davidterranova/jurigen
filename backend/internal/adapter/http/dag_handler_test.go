@@ -35,34 +35,58 @@ func TestDAGHandler_List(t *testing.T) {
 		checkResponse  func(*testing.T, *httptest.ResponseRecorder)
 	}{
 		{
-			name: "successfully returns list of DAG IDs",
+			name: "successfully returns list of DAGs with summary info",
 			setupMock: func(mockApp *mocks.MockApp) {
-				dagIds := []uuid.UUID{
-					uuid.MustParse("550e8400-e29b-41d4-a716-446655440000"),
-					uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c8"),
+				dagId1 := uuid.MustParse("550e8400-e29b-41d4-a716-446655440000")
+				dagId2 := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+
+				dag1 := &model.DAG{
+					Id:    dagId1,
+					Title: "Employment Law Case",
+					Nodes: make(map[uuid.UUID]model.Node),
+					Metadata: &model.DAGMetadata{
+						IsValid:    true,
+						Statistics: model.ValidationStatistics{TotalNodes: 5},
+					},
 				}
-				mockApp.EXPECT().List(gomock.Any(), usecase.CmdListDAGs{}).Return(dagIds, nil)
+				dag2 := &model.DAG{
+					Id:       dagId2,
+					Title:    "Contract Dispute",
+					Nodes:    make(map[uuid.UUID]model.Node),
+					Metadata: nil, // No metadata should default to invalid
+				}
+
+				dags := []*model.DAG{dag1, dag2}
+				mockApp.EXPECT().ListDAGs(gomock.Any(), usecase.CmdListDAGs{}).Return(dags, nil)
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, rr *httptest.ResponseRecorder) {
-				var response DAGListPresenter
+				var response DAGSummaryListPresenter
 				err := json.Unmarshal(rr.Body.Bytes(), &response)
 				require.NoError(t, err)
 
 				assert.Len(t, response.DAGs, 2)
 				assert.Equal(t, 2, response.Count)
-				assert.Contains(t, response.DAGs, uuid.MustParse("550e8400-e29b-41d4-a716-446655440000"))
-				assert.Contains(t, response.DAGs, uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c8"))
+
+				// Check first DAG
+				assert.Equal(t, uuid.MustParse("550e8400-e29b-41d4-a716-446655440000"), response.DAGs[0].Id)
+				assert.Equal(t, "Employment Law Case", response.DAGs[0].Title)
+				assert.True(t, response.DAGs[0].IsValid)
+
+				// Check second DAG
+				assert.Equal(t, uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c8"), response.DAGs[1].Id)
+				assert.Equal(t, "Contract Dispute", response.DAGs[1].Title)
+				assert.False(t, response.DAGs[1].IsValid) // Should be false when metadata is nil
 			},
 		},
 		{
 			name: "returns empty list when no DAGs exist",
 			setupMock: func(mockApp *mocks.MockApp) {
-				mockApp.EXPECT().List(gomock.Any(), usecase.CmdListDAGs{}).Return([]uuid.UUID{}, nil)
+				mockApp.EXPECT().ListDAGs(gomock.Any(), usecase.CmdListDAGs{}).Return([]*model.DAG{}, nil)
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, rr *httptest.ResponseRecorder) {
-				var response DAGListPresenter
+				var response DAGSummaryListPresenter
 				err := json.Unmarshal(rr.Body.Bytes(), &response)
 				require.NoError(t, err)
 
@@ -73,7 +97,7 @@ func TestDAGHandler_List(t *testing.T) {
 		{
 			name: "returns 500 when app layer fails",
 			setupMock: func(mockApp *mocks.MockApp) {
-				mockApp.EXPECT().List(gomock.Any(), usecase.CmdListDAGs{}).Return([]uuid.UUID{}, usecase.ErrInternal)
+				mockApp.EXPECT().ListDAGs(gomock.Any(), usecase.CmdListDAGs{}).Return(nil, usecase.ErrInternal)
 			},
 			expectedStatus: http.StatusInternalServerError,
 			checkResponse: func(t *testing.T, rr *httptest.ResponseRecorder) {

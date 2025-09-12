@@ -19,6 +19,7 @@ import (
 type App interface {
 	Get(ctx context.Context, cmd usecase.CmdGetDAG) (*model.DAG, error)
 	List(ctx context.Context, cmd usecase.CmdListDAGs) ([]uuid.UUID, error)
+	ListDAGs(ctx context.Context, cmd usecase.CmdListDAGs) ([]*model.DAG, error)
 	Update(ctx context.Context, cmd usecase.CmdUpdateDAG) (*model.DAG, error)
 }
 
@@ -125,28 +126,28 @@ func (h *dagHandler) Get(w http.ResponseWriter, r *http.Request) {
 	xhttp.WriteObject(ctx, w, http.StatusOK, NewDAGPresenter(dag))
 }
 
-// List retrieves all available Legal Case DAG identifiers
+// List retrieves all available Legal Case DAGs with summary information
 //
 // @Summary List Legal Case DAGs
-// @Description Retrieve a list of all available Legal Case DAG identifiers in the system
+// @Description Retrieve a list of all available Legal Case DAGs with ID, title, and validation status
 // @Tags DAGs
 // @Accept json
 // @Produce json
-// @Success 200 {object} DAGListPresenter "Successfully retrieved DAG list"
+// @Success 200 {object} DAGSummaryListPresenter "Successfully retrieved DAG list with summary information"
 // @Failure 500 {object} xhttp.ErrorResponse "Internal server error"
 // @Security ApiKeyAuth
 // @Router /dags [get]
 func (h *dagHandler) List(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	dagIds, err := h.app.List(ctx, usecase.CmdListDAGs{})
+	dags, err := h.app.ListDAGs(ctx, usecase.CmdListDAGs{})
 	if err != nil {
 		log.Error().Err(err).Msg("failed to list DAGs")
 		xhttp.WriteError(ctx, w, http.StatusInternalServerError, "failed to list DAGs", err)
 		return
 	}
 
-	xhttp.WriteObject(ctx, w, http.StatusOK, NewDAGListPresenter(dagIds))
+	xhttp.WriteObject(ctx, w, http.StatusOK, NewDAGSummaryListPresenter(dags))
 }
 
 // Update modifies an existing Legal Case DAG with new content

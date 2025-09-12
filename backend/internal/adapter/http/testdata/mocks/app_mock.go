@@ -67,6 +67,21 @@ func (mr *MockAppMockRecorder) List(ctx, cmd interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockApp)(nil).List), ctx, cmd)
 }
 
+// ListDAGs mocks base method.
+func (m *MockApp) ListDAGs(ctx context.Context, cmd usecase.CmdListDAGs) ([]*model.DAG, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListDAGs", ctx, cmd)
+	ret0, _ := ret[0].([]*model.DAG)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListDAGs indicates an expected call of ListDAGs.
+func (mr *MockAppMockRecorder) ListDAGs(ctx, cmd interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListDAGs", reflect.TypeOf((*MockApp)(nil).ListDAGs), ctx, cmd)
+}
+
 // Update mocks base method.
 func (m *MockApp) Update(ctx context.Context, cmd usecase.CmdUpdateDAG) (*model.DAG, error) {
 	m.ctrl.T.Helper()
