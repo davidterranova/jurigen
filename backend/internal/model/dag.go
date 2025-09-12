@@ -4,14 +4,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 )
 
 type DAG struct {
-	Id    uuid.UUID `json:"id"`
-	Title string    `json:"title"`
-	Nodes map[uuid.UUID]Node
+	Id       uuid.UUID `json:"id"`
+	Title    string    `json:"title"`
+	Nodes    map[uuid.UUID]Node
+	Metadata *DAGMetadata `json:"metadata,omitempty"`
 }
 
 type Node struct {
@@ -29,11 +31,41 @@ type Answer struct {
 	Metadata    map[string]interface{} `json:"metadata,omitempty"`
 }
 
+// DAGMetadata combines a DAG with its validation metadata
+type DAGMetadata struct {
+	IsValid         bool                 `json:"is_valid"`
+	Statistics      ValidationStatistics `json:"statistics"`
+	LastValidatedAt time.Time            `json:"last_validated_at"`
+}
+
+// ValidationStatistics provides DAG structure statistics
+type ValidationStatistics struct {
+	TotalNodes   int      `json:"total_nodes"`
+	RootNodes    int      `json:"root_nodes"`
+	LeafNodes    int      `json:"leaf_nodes"`
+	TotalAnswers int      `json:"total_answers"`
+	MaxDepth     int      `json:"max_depth"`
+	HasCycles    bool     `json:"has_cycles"`
+	RootNodeIDs  []string `json:"root_node_ids,omitempty"`
+	LeafNodeIDs  []string `json:"leaf_node_ids,omitempty"`
+	CyclePaths   []string `json:"cycle_paths,omitempty"`
+}
+
+// NewDAGMetadata creates a new DAGMetadata with default values
+func NewDAGMetadata() *DAGMetadata {
+	return &DAGMetadata{
+		IsValid:         false,
+		Statistics:      ValidationStatistics{},
+		LastValidatedAt: time.Time{}, // Zero time indicates never validated
+	}
+}
+
 func NewDAG(title string) *DAG {
 	return &DAG{
-		Id:    uuid.New(),
-		Title: title,
-		Nodes: make(map[uuid.UUID]Node),
+		Id:       uuid.New(),
+		Title:    title,
+		Nodes:    make(map[uuid.UUID]Node),
+		Metadata: NewDAGMetadata(),
 	}
 }
 
